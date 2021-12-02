@@ -84,6 +84,12 @@ class Vector2:
     def unit(self):
         return self / self.length()
 
+    @classmethod
+    def pointed(cls, length, degree):
+        from math import sin, cos
+        return cls(length * cos(degree),
+                   length * sin(degree))
+
 def musrand(seed):
     a = int(seed)
     b = a + 1
