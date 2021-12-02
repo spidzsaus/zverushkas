@@ -43,14 +43,15 @@ class Animal:
             y = perlin1d(spine.seed_v, i / spine.flatness)
             joints.append((i, abs(x - xp) + abs(y - yp)))
             xp, yp = x, y
-        joints.sort(key=lambda x: x[1], reverse=True)
-        for i in range(2 + randint(seed * 14127, 0, 2)):
-            animal.leg_points.append(joints[i][0])
+        #joints.sort(key=lambda x: x[1], reverse=True)
+        #for i in range(2 + randint(seed * 14127, 0, 2)):
+        #    animal.leg_points.append(joints[i][0])
         return animal
 
     @staticmethod
     def spine_to_vectors(spine: Category):
         from extra_maths import perlin1d, Vector2
+        from math import pi
         output = []
         seedx = spine.seed_h
         seedy = spine.seed_v
@@ -60,8 +61,8 @@ class Animal:
         divz = spine.uniformity
         for i in range(spine.lenght):
             x = abs(perlin1d(seedx, i / divx))
-            y = perlin1d(seedy, i / divy)
-            vec = Vector2(x, y)
+            y = perlin1d(seedy, i / divy) * pi * 2
+            vec = Vector2.pointed(x, y)
             vec.z = abs(perlin1d(seedz, i / divz))
             output.append(vec)
         return output
@@ -69,18 +70,18 @@ class Animal:
     def draw(self):
         from PIL import Image, ImageDraw
         from extra_maths import Vector2
-        output = Image.new('RGBA', (1000, 1000))
+        output = Image.new('RGBA', (2000, 2000))
         draw = ImageDraw.Draw(output)
-        coords = Vector2(0, 500)
+        coords = Vector2(1000, 1000)
         spine = Animal.spine_to_vectors(self.spine)
         i = 1
         for i, bone in enumerate(spine):
             bone.y *= -1
-            newcoords = coords + (bone * 250)
+            newcoords = coords + (bone * 350)
             draw.line((coords.tuple(), newcoords.tuple()), fill=(255,
                                                                  255,
                                                                  255),
-                                                           width=int(bone.z * 250))
+                                                           width=int(bone.z * 350))
             coords = newcoords
             if i in self.leg_points:
                 draw.ellipse(((newcoords - Vector2(10, 10)).tuple(),
