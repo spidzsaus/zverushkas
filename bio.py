@@ -27,25 +27,23 @@ class Animal:
         animal = Animal()
         spine = Category()
         spine.lenght = randint(seed * 1931, 7, 15)
-        spine.straightness = randint(seed * 2124, 1, 100) / 10
-        spine.flatness = randint(seed * 6114, 1, 100) / 10
-        spine.uniformity = randint(seed * 5667, 50, 100) / 5
+        spine.gradation = randint(seed * 2124, 1, 100) / 10
+        spine.straightness = randint(seed * 6114, 1, 100) / 10
+        spine.distribution = randint(seed * 5667, 50, 100) / 5
         spine.seed_v = seed * 10221
         spine.seed_h = seed * 26714
         spine.seed_w = seed * 51356
         animal.spine = spine
 
         joints = []
-        xp = abs(perlin1d(spine.seed_h, 0))
         yp = perlin1d(spine.seed_v, 0)
         for i in range(1, spine.lenght):
-            x = perlin1d(spine.seed_h, i / spine.straightness)
-            y = perlin1d(spine.seed_v, i / spine.flatness)
-            joints.append((i, abs(x - xp) + abs(y - yp)))
-            xp, yp = x, y
-        #joints.sort(key=lambda x: x[1], reverse=True)
-        #for i in range(2 + randint(seed * 14127, 0, 2)):
-        #    animal.leg_points.append(joints[i][0])
+            y = perlin1d(spine.seed_v, i / spine.straightness)
+            joints.append((i, abs(abs(y) - abs(yp))))
+            yp = y
+        joints.sort(key=lambda x: x[1], reverse=True)
+        for i in range(2 + randint(seed * 14127, 0, 1)):
+            animal.leg_points.append(joints[i][0])
         return animal
 
     @staticmethod
@@ -56,12 +54,12 @@ class Animal:
         seedx = spine.seed_h
         seedy = spine.seed_v
         seedz = spine.seed_w
-        divx = spine.straightness
-        divy = spine.flatness
-        divz = spine.uniformity
+        divx = spine.gradation
+        divy = spine.straightness
+        divz = spine.distribution
         for i in range(spine.lenght):
             x = abs(perlin1d(seedx, i / divx))
-            y = perlin1d(seedy, i / divy) * pi * 2
+            y = perlin1d(seedy, i / divy) * pi
             vec = Vector2.pointed(x, y)
             vec.z = abs(perlin1d(seedz, i / divz))
             output.append(vec)
@@ -87,7 +85,7 @@ class Animal:
                 draw.ellipse(((newcoords - Vector2(10, 10)).tuple(),
                               (newcoords + Vector2(10, 10)).tuple()),
                              fill=(0, 255, 0))
-                draw.line((newcoords.tuple(), (newcoords.x, 1000)),
+                draw.line((newcoords.tuple(), (newcoords.x, 2000)),
                           fill=(0, 255, 0),
                           width=5)
         draw.ellipse(((newcoords - Vector2(10, 10)).tuple(),
