@@ -45,6 +45,32 @@ class Animal:
         for i in range(2 + randint(seed * 14127, 0, 1)):
             animal.leg_points.append(joints[i][0])
         return animal
+    
+    @staticmethod
+    def from_params(length, gradation, straightness, 
+                    distribution, seed):
+        from extra_maths import randint, perlin1d
+        animal = Animal()
+        spine = Category()
+        spine.lenght = length
+        spine.gradation = gradation
+        spine.straightness = straightness
+        spine.distribution = distribution
+        spine.seed_v = seed * 10221
+        spine.seed_h = seed * 26714
+        spine.seed_w = seed * 51356
+        animal.spine = spine
+        joints = []
+        yp = perlin1d(spine.seed_v, 0)
+        for i in range(1, spine.lenght):
+            y = perlin1d(spine.seed_v, i / spine.straightness)
+            joints.append((i, abs(abs(y) - abs(yp))))
+            yp = y
+        joints.sort(key=lambda x: x[1], reverse=True)
+        for i in range(2 + randint(seed * 14127, 0, 1)):
+            animal.leg_points.append(joints[i][0])
+        return animal
+
 
     @staticmethod
     def spine_to_vectors(spine: Category):
