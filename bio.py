@@ -91,21 +91,18 @@ class Animal:
             output.append(vec)
         return output
             
-    def draw(self):
-        from PIL import Image, ImageDraw
+    def draw(self, draw, scale):
         from extra_maths import Vector2
-        output = Image.new('RGBA', (2000, 2000))
-        draw = ImageDraw.Draw(output)
-        coords = Vector2(1000, 1000)
+        coords = Vector2(200, 1000)
         spine = Animal.spine_to_vectors(self.spine)
         i = 1
         for i, bone in enumerate(spine):
             bone.y *= -1
-            newcoords = coords + (bone * 350)
-            draw.line((coords.tuple(), newcoords.tuple()), fill=(255,
-                                                                 255,
+            newcoords = coords + (bone * scale)
+            draw.line((coords.tuple(), newcoords.tuple()), fill=(0,
+                                                                 0,
                                                                  255),
-                                                           width=int(bone.z * 350))
+                                                           width=int(bone.z * scale))
             coords = newcoords
             if i in self.leg_points:
                 draw.ellipse(((newcoords - Vector2(10, 10)).tuple(),
@@ -117,7 +114,3 @@ class Animal:
         draw.ellipse(((newcoords - Vector2(10, 10)).tuple(),
                       (newcoords + Vector2(10, 10)).tuple()),
                      fill=(255, 0, 0))
-        return output
-
-
-
