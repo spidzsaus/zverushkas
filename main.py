@@ -8,6 +8,6 @@ if __name__ == '__main__':
     print(test.spine)
     output = Image.new('RGBA', (2000, 2000))
     draw = ImageDraw.Draw(output)    
-    test.draw(draw, 350)
+    test.draw(draw, 500)
     output.show()
     
