@@ -1,32 +1,7 @@
-class Category:
-    def __init__(self, default=0):
-        self.default = 0
-    
-    def __getattr__(self, value):
-        return self.default
-    
-    def __str__(self):
-        output = ''
-        for key, value in self.__dict__.items():
-            output += f'| {key}: \t {value}' '\n'
-        return output
-    
-    def copy(self):
-        c = Category()
-        for key, value in self.__dict__.items():
-            c.__setattr__(key, value)
-        return c
+from extra_types import Category
 
-class Enum:
-    def __init__(self, *modes):
-        self.indexes = []
-        for mode in modes:
-            obj = object()
-            self.__setattr__(mode, obj)
-            self.indexes.append(obj)
-
-    def __getitem__(self, value):
-        return self.indexes[value]
+class Spine(Category):
+    pass
 
 class Animal:
     def __init__(self):
