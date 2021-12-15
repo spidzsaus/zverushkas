@@ -1,11 +1,33 @@
 from extra_types import Category
 
 class Spine(Category):
-    pass
+    def vectors(self):
+        from extra_maths import perlin1d, Vector2
+        from math import pi
+        output = []
+        seedx = self.seed_h
+        seedy = self.seed_v
+        seedz = self.seed_w
+        divx = self.gradation
+        divy = self.straightness
+        divz = self.distribution
+        mulx = self.length_modifier
+        muly = self.curve_modifier
+        mulz = self.width_modifier
+        addx = self.forced_length
+        addy = self.forced_angle
+        addz = self.forced_width
+        for i in range(self.length):
+            x = (addx + abs(perlin1d(seedx, i / divx))) * mulx
+            y = (addy + perlin1d(seedy, i / divy) * pi) * muly
+            vec = Vector2.pointed(x, y)
+            vec.z = (addz + abs(perlin1d(seedz, i / divz))) * mulz
+            output.append(vec)
+        return output
 
 class Animal:
     def __init__(self):
-        self.spine = Category(0)
+        self.spine = Spine()
         self.legs = {}
 
     @staticmethod
@@ -76,32 +98,6 @@ class Animal:
         for i in range(2 + randint(seed * 14127, 0, 1)):
             animal.legs.append(joints[i][0] - 1)
         return animal
-
-
-    @staticmethod
-    def spine_to_vectors(spine: Category):
-        from extra_maths import perlin1d, Vector2
-        from math import pi
-        output = []
-        seedx = spine.seed_h
-        seedy = spine.seed_v
-        seedz = spine.seed_w
-        divx = spine.gradation
-        divy = spine.straightness
-        divz = spine.distribution
-        mulx = spine.length_modifier
-        muly = spine.curve_modifier
-        mulz = spine.width_modifier
-        addx = spine.forced_length
-        addy = spine.forced_angle
-        addz = spine.forced_width
-        for i in range(spine.length):
-            x = (addx + abs(perlin1d(seedx, i / divx))) * mulx
-            y = (addy + perlin1d(seedy, i / divy) * pi) * muly
-            vec = Vector2.pointed(x, y)
-            vec.z = (addz + abs(perlin1d(seedz, i / divz))) * mulz
-            output.append(vec)
-        return output
             
     def draw(self, draw, scale):
         from extra_maths import Vector2
