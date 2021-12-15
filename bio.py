@@ -100,36 +100,6 @@ class Animal:
             animal.legs.append(joints[i][0] - 1)
         return animal
             
-    def draw(self, draw, scale):
-        from extra_maths import Vector2
-        coords = Vector2(200, 1000)
-        spine = Animal.spine_to_vectors(self.spine)
-        i = 1
-        for i, bone in enumerate(spine):
-            bone.y *= -1
-            newcoords = coords + (bone * scale)
-            draw.line((coords.tuple(), newcoords.tuple()), fill=(165,
-                                                                 15 * i,
-                                                                 255),
-                                                           width=int(bone.z * scale))
-            coords = newcoords
-            if i in self.legs:
-                leg = Animal.spine_to_vectors(self.legs[i])
-                dcoords = coords
-                for j, bone in enumerate(leg):
-                    bone.y *= -1
-                    dnewcoords = dcoords + (bone * scale)
-                    if j == len(leg) - 1:
-                        dnewcoords.y = 1200
-                    draw.line((dcoords.tuple(), dnewcoords.tuple()), fill=(25 * i,
-                                                                           255,
-                                                                           25 * i),
-                                                                     width=int(bone.z * scale))
-                    dcoords = dnewcoords                
-        draw.ellipse(((newcoords - Vector2(10, 10)).tuple(),
-                      (newcoords + Vector2(10, 10)).tuple()),
-                     fill=(255, 0, 0))
-
 
 class AnimalDraw:
     def __init__(self, animal: Animal):
