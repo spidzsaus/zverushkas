@@ -12,7 +12,7 @@ class Category:
         return output
     
     def copy(self):
-        c = Category()
+        c = type(self)()
         for key, value in self.__dict__.items():
             c.__setattr__(key, value)
         return c
@@ -27,3 +27,6 @@ class Enum:
 
     def __getitem__(self, value):
         return self.indexes[value]
+
+
+DefaultValue = object()

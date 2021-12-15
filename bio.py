@@ -1,7 +1,8 @@
-from extra_types import Category
+from extra_maths import Vector2
+from extra_types import Category, DefaultValue
 
 class Spine(Category):
-    def vectors(self):
+    def to_vectors(self):
         from extra_maths import perlin1d, Vector2
         from math import pi
         output = []
@@ -35,7 +36,7 @@ class Animal:
         from extra_maths import randint, perlin1d
         from math import pi
         animal = Animal()
-        spine = Category(0)
+        spine = Spine()
         spine.length = randint(seed * 1931, 7, 15)
         spine.gradation = randint(seed * 2124, 1, 100) / 10
         spine.straightness = randint(seed * 6114, 1, 100) / 10
@@ -128,3 +129,69 @@ class Animal:
         draw.ellipse(((newcoords - Vector2(10, 10)).tuple(),
                       (newcoords + Vector2(10, 10)).tuple()),
                      fill=(255, 0, 0))
+
+
+class AnimalDraw:
+    def __init__(self, animal: Animal):
+        self.animal = animal
+    
+    def draw(self, scale, draw=DefaultValue, coords=Vector2(0, 0)):
+        from extra_maths import Vector2
+        left = coords.x
+        right = coords.x
+        down = coords.y
+        up = coords.y
+        spine = self.animal.spine.to_vectors()
+        spine_dots = [(coords,)]
+        legs_dots = [] 
+        for i, bone in enumerate(spine):
+            bone.y *= -1
+            newcoords = coords + (bone * scale)
+            spine_dots.append((newcoords, int(bone.z * scale)))
+            coords = newcoords
+            right = max(right, newcoords.x + bone.z * scale)
+            left = min(left, newcoords.x - bone.z * scale)
+            down = max(down, newcoords.y + bone.z * scale)
+            up = min(up, newcoords.y - bone.z * scale)
+
+            
+            if i in self.animal.legs:
+                leg = self.animal.legs[i].to_vectors()
+                dcoords = coords
+                legs_dots.append([(coords,)])
+                for j, bone in enumerate(leg):
+                    bone.y *= -1
+                    dnewcoords = dcoords + (bone * scale)
+                    legs_dots[-1].append((dnewcoords, int(bone.z * scale)))
+                    dcoords = dnewcoords
+                    right = max(right, dnewcoords.x + bone.z * scale)
+                    left = min(left, dnewcoords.x - bone.z * scale)
+                    down = max(down, dnewcoords.y + bone.z * scale)
+                    up = min(up, dnewcoords.y - bone.z * scale)
+        offset = Vector2(0, 0)
+        returnim = False
+        if draw is DefaultValue:
+            from PIL import Image, ImageDraw
+            output = Image.new('RGBA', (abs(int(right - left)), abs(int(down - up))))
+            draw = ImageDraw.Draw(output)
+            offset = Vector2(left, up)
+            returnim = True
+        
+        for i, dot in enumerate(spine_dots):
+            if not i: continue
+            draw.line(((spine_dots[i - 1][0] - offset).tuple(), 
+                        (dot[0] - offset).tuple()), fill=(165, 15 * i, 255),
+                        width=dot[1])
+        for i, leg in enumerate(legs_dots):
+            for j, dot in enumerate(leg):
+                if not j: continue
+                draw.line(((leg[j - 1][0] - offset).tuple(), 
+                            (dot[0] - offset).tuple()), fill=(165, 15 * i, 255),
+                            width=dot[1])
+        draw.ellipse(((spine_dots[-1][0] - Vector2(scale / 25, scale / 25) - offset).tuple(),
+                      (spine_dots[-1][0] + Vector2(scale / 25, scale / 25) - offset).tuple()),
+                     fill=(255, 0, 0))
+        if returnim:
+            return output
+        
+
