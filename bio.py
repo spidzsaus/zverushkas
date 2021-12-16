@@ -56,12 +56,15 @@ class Animal:
         joints.sort(key=lambda x: x[1], reverse=True)
 
         for i in range(leg_count):
-            leg = spine.copy()
+            leg = Spine()
+            leg.gradation = gradation
+            leg.straightness = straightness
+            leg.distribution = distribution
             leg.angle = joints[i][1] - pi / 2
             leg.length = 5
-            spine.seed_v = seed * 42839 * (i + 1)
-            spine.seed_h = seed * 35231 * (i + 1)
-            spine.seed_w = seed * 51618 * (i + 1)
+            leg.seed_v = seed * 42839 * (i + 1)
+            leg.seed_h = seed * 35231 * (i + 1)
+            leg.seed_w = seed * 51618 * (i + 1)
             animal.legs[joints[i][0]] = leg
 
         return animal
