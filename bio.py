@@ -33,6 +33,7 @@ class Animal:
     def from_params(length, gradation, straightness, 
                     distribution, leg_count, seed):
         from extra_maths import randint, perlin1d
+        from math import pi
         
         animal = Animal()
         spine = Spine()
@@ -55,7 +56,14 @@ class Animal:
         joints.sort(key=lambda x: x[1], reverse=True)
 
         for i in range(leg_count):
-            animal.legs[i] = joints[i][0] - 1
+            leg = spine.copy()
+            leg.angle = joints[i][1] - pi / 2
+            leg.length = 5
+            spine.seed_v = seed * 42839 * (i + 1)
+            spine.seed_h = seed * 35231 * (i + 1)
+            spine.seed_w = seed * 51618 * (i + 1)
+            animal.legs[joints[i][0]] = leg
+
         return animal
 
 class AnimalGenerator:
@@ -64,7 +72,7 @@ class AnimalGenerator:
         length = randint(seed * 199, 5, 15)
         gradation = randint(seed * 235, 1, 1000) / 100
         straightness = randint(seed, 500, 1000) / 100
-        distribution = randint(seed, 250, 1000) / 100
+        distribution = randint(seed, 500, 1000) / 100
         leg_count = 2
         return Animal.from_params(length, gradation, straightness, distribution,
                                   leg_count, seed)
@@ -107,6 +115,7 @@ class AnimalDraw:
                     left = min(left, dnewcoords.x - bone.z * scale)
                     down = max(down, dnewcoords.y + bone.z * scale)
                     up = min(up, dnewcoords.y - bone.z * scale)
+
         offset = Vector2(0, 0)
         returnim = False
         if draw is DefaultValue:
