@@ -52,7 +52,7 @@ class Animal:
             if not i: continue
             a, b = bone.angle, vecs[i - 1].angle
             a, b = max(a, b), min(a, b)
-            joints.append((i, abs(a - b)))
+            joints.append((i - 1, abs(a - b)))
         joints.sort(key=lambda x: x[1], reverse=True)
 
         for i in range(leg_count):
@@ -60,7 +60,7 @@ class Animal:
             leg.gradation = gradation
             leg.straightness = straightness
             leg.distribution = distribution
-            leg.angle = joints[i][1] - pi / 2
+            leg.angle = - pi / 2
             leg.length = 5
             leg.seed_v = seed * 42839 * (i + 1)
             leg.seed_h = seed * 35231 * (i + 1)
