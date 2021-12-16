@@ -1,4 +1,4 @@
-from extra_maths import Vector2
+from extra_maths import Vector2, randint
 from extra_types import Category, DefaultValue
 
 class Spine(Category):
@@ -28,50 +28,14 @@ class Animal:
     def __init__(self):
         self.spine = Spine()
         self.legs = {}
-
-    @staticmethod
-    def from_seed(seed):
-        from extra_maths import randint, perlin1d
-        from math import pi
-        animal = Animal()
-        spine = Spine()
-        spine.length = randint(seed * 1931, 7, 15)
-        spine.gradation = randint(seed * 2124, 1, 100) / 10
-        spine.straightness = randint(seed * 6114, 1, 100) / 10
-        spine.distribution = randint(seed * 5667, 50, 100) / 5
-        spine.seed_v = seed * 10221
-        spine.seed_h = seed * 26714
-        spine.seed_w = seed * 51356
-        animal.spine = spine
-
-        joints = []
-        yp = perlin1d(spine.seed_v, 0)
-        for i in range(1, spine.length):
-            y = perlin1d(spine.seed_v, i / spine.straightness)
-            joints.append((i, y, abs(abs(y) - abs(yp))))
-            yp = y
-        joints.sort(key=lambda x: x[2], reverse=True)
-        for i in range(2 + randint(seed * 14127, 0, 2)):
-            leg = spine.copy()
-            leg.angle = joints[i][1] - pi / 2
-            leg.width_modifier = 0.5
-            leg.length = 5
-            leg.forced_length = 0.001
-            spine.seed_v = seed * 42839 * (i + 1)
-            spine.seed_h = seed * 35231 * (i + 1)
-            spine.seed_w = seed * 51618 * (i + 1)
-            animal.legs[joints[i][0]] = leg
-        return animal
     
     @staticmethod
     def from_params(length, gradation, straightness, 
-                    distribution, seed):
+                    distribution, leg_count, seed):
         from extra_maths import randint, perlin1d
         
-        return NotImplemented
-        
         animal = Animal()
-        spine = Category(0)
+        spine = Spine()
         spine.length = length
         spine.gradation = gradation
         spine.straightness = straightness
@@ -82,16 +46,29 @@ class Animal:
         animal.spine = spine
         
         joints = []
-        yp = perlin1d(spine.seed_v, 0)
-        for i in range(1, spine.lenght):
-            y = perlin1d(spine.seed_v, i / spine.straightness)
-            joints.append((i, abs(abs(y) - abs(yp))))
-            yp = y
+        vecs = spine.to_vectors()
+        for i, bone in enumerate(vecs):
+            if not i: continue
+            a, b = bone.angle, vecs[i - 1].angle
+            a, b = max(a, b), min(a, b)
+            joints.append((i, abs(a - b)))
         joints.sort(key=lambda x: x[1], reverse=True)
-        for i in range(2 + randint(seed * 14127, 0, 1)):
-            animal.legs.append(joints[i][0] - 1)
+
+        for i in range(leg_count):
+            animal.legs[i] = joints[i][0] - 1
         return animal
-            
+
+class AnimalGenerator:
+    @staticmethod
+    def mamal(seed):
+        length = randint(seed * 199, 5, 15)
+        gradation = randint(seed * 235, 1, 1000) / 100
+        straightness = randint(seed, 500, 1000) / 100
+        distribution = randint(seed, 250, 1000) / 100
+        leg_count = 2
+        return Animal.from_params(length, gradation, straightness, distribution,
+                                  leg_count, seed)
+
 
 class AnimalDraw:
     def __init__(self, animal: Animal):

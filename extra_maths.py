@@ -1,7 +1,20 @@
+from math import degrees
+from typing import Protocol
+from extra_types import DefaultValue
+
 class Vector2:
+    _angle = DefaultValue
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
+
+    @property
+    def angle(self):
+        if self._angle is DefaultValue:
+            from math import arctg
+            self._angle = arctg(self.y / self.x)
+        return self._angle
 
     def tuple(self):
         return (self.x, self.y)
@@ -87,8 +100,10 @@ class Vector2:
     @classmethod
     def pointed(cls, length, degree):
         from math import sin, cos
-        return cls(length * cos(degree),
+        vec =  cls(length * cos(degree),
                    length * sin(degree))
+        vec._angle = degree
+        return vec
 
 def musrand(seed):
     a = int(seed)
