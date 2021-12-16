@@ -1,6 +1,3 @@
-from PIL.ImageDraw import Outline
-
-
 if __name__ == '__main__':
     from bio import Animal, AnimalDraw
     from random import randint

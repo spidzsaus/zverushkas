@@ -2,6 +2,9 @@ from extra_maths import Vector2
 from extra_types import Category, DefaultValue
 
 class Spine(Category):
+    def __init__(self):
+        self.default = 0
+        
     def to_vectors(self):
         from extra_maths import perlin1d, Vector2
         from math import pi
@@ -12,17 +15,12 @@ class Spine(Category):
         divx = self.gradation
         divy = self.straightness
         divz = self.distribution
-        mulx = self.length_modifier
-        muly = self.curve_modifier
-        mulz = self.width_modifier
-        addx = self.forced_length
-        addy = self.forced_angle
-        addz = self.forced_width
+
         for i in range(self.length):
-            x = (addx + abs(perlin1d(seedx, i / divx))) * mulx
-            y = (addy + perlin1d(seedy, i / divy) * pi) * muly
+            x = (abs(perlin1d(seedx, i / divx)))
+            y = self.angle + perlin1d(seedy, i / divy) * pi
             vec = Vector2.pointed(x, y)
-            vec.z = (addz + abs(perlin1d(seedz, i / divz))) * mulz
+            vec.z = (abs(perlin1d(seedz, i / divz)))
             output.append(vec)
         return output
 
@@ -41,12 +39,6 @@ class Animal:
         spine.gradation = randint(seed * 2124, 1, 100) / 10
         spine.straightness = randint(seed * 6114, 1, 100) / 10
         spine.distribution = randint(seed * 5667, 50, 100) / 5
-        spine.forced_length = 0.001
-        spine.length_modifier  = 1
-        spine.forced_angle = 0
-        spine.curve_modifier = 1 #randint(seed * 3521, 25, 200) / 100
-        spine.forced_width = 0.001
-        spine.width_modifier = randint(seed * 3521, 25, 100) / 100
         spine.seed_v = seed * 10221
         spine.seed_h = seed * 26714
         spine.seed_w = seed * 51356
@@ -61,7 +53,7 @@ class Animal:
         joints.sort(key=lambda x: x[2], reverse=True)
         for i in range(2 + randint(seed * 14127, 0, 2)):
             leg = spine.copy()
-            leg.forced_angle = joints[i][1] - pi / 2
+            leg.angle = joints[i][1] - pi / 2
             leg.width_modifier = 0.5
             leg.length = 5
             leg.forced_length = 0.001
