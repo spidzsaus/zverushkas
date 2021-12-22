@@ -1,7 +1,12 @@
 from extra_maths import Vector2, randint
+from extra_maths import x as VARX
 from extra_types import Category, DefaultValue
 
 class Spine(Category):
+    vfunc = VARX
+    hfunc = VARX
+    wfunc = VARX
+
     def __init__(self):
         self.default = 0
         
@@ -15,14 +20,20 @@ class Spine(Category):
         divx = self.gradation
         divy = self.straightness
         divz = self.distribution
+        xfunc = self.hfunc
+        yfunc = self.vfunc
+        zfunc = self.wfunc
 
         for i in range(self.length):
-            x = (abs(perlin1d(seedx, i / divx)))
-            y = self.angle + perlin1d(seedy, i / divy) * pi
+            x = xfunc(abs(perlin1d(seedx, i / divx)))
+            y = yfunc(perlin1d(seedy, i / divy) * pi)
             vec = Vector2.pointed(x, y)
-            vec.z = (abs(perlin1d(seedz, i / divz)))
+            vec.z = zfunc(abs(perlin1d(seedz, i / divz)))
             output.append(vec)
         return output
+    
+    def cast_ik(self, startpoint, endpoint):
+        pass
 
 class Animal:
     def __init__(self):
@@ -52,19 +63,21 @@ class Animal:
             if not i: continue
             a, b = bone.angle, vecs[i - 1].angle
             a, b = max(a, b), min(a, b)
-            joints.append((i - 1, abs(a - b)))
+            joints.append((i - 1, abs(a - b), bone.length()))
         joints.sort(key=lambda x: x[1], reverse=True)
 
         for i in range(leg_count):
             leg = Spine()
-            leg.gradation = gradation
+            leg.gradation = 100
             leg.straightness = straightness
             leg.distribution = distribution
-            leg.angle = - pi / 2
-            leg.length = 5
+            leg.length = 2
             leg.seed_v = seed * 42839 * (i + 1)
             leg.seed_h = seed * 35231 * (i + 1)
             leg.seed_w = seed * 51618 * (i + 1)
+            leg.hfunc = joints[i][2] + VARX.abs() * 10
+            leg.vfunc = VARX - pi / 2
+            leg.wfunc = VARX * 0.6
             animal.legs[joints[i][0]] = leg
 
         return animal

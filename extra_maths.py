@@ -140,3 +140,87 @@ def musnoise1d(seed, x):
     fR = randint(seed ^ cP, -10, 10)
     cR = randint(seed ^ cP + 1, -10, 10)
     return lerp(fR, cR, d) / 10
+
+
+class Expression:
+    def __init__(self):
+        self.operators = []
+
+    def __add__(self, other):
+        ret = Expression()
+        ret.operators = self.operators[:]
+        ret.operators.append(('__add__', other))
+        return ret
+
+    def __radd__(self, other):
+        ret = Expression()
+        ret.operators = self.operators[:]
+        ret.operators.append(('__add__', other))
+        return ret
+
+    def __mul__(self, other):
+        ret = Expression()
+        ret.operators = self.operators[:]
+        ret.operators.append(('__mul__', other))
+        return ret
+    
+    def __rmul__(self, other):
+        ret = Expression()
+        ret.operators = self.operators[:]
+        ret.operators.append(('__mul__', other))
+        return ret
+    
+    def __truediv__(self, other):
+        ret = Expression()
+        ret.operators = self.operators[:]
+        ret.operators.append(('__truediv__', other))
+        return ret  
+
+    def __rtruediv__(self, other):
+        ret = Expression()
+        ret.operators = self.operators[:]
+        ret.operators.append(('__rtruediv__', other))
+        return ret
+
+    def __sub__(self, other):
+        ret = Expression()
+        ret.operators = self.operators[:]
+        ret.operators.append(('__sub__', other))
+        return ret
+
+    def __rsub__(self, other):
+        ret = Expression()
+        ret.operators = self.operators[:]
+        ret.operators.append(('__rsub__', other))
+        return ret
+
+    def __pow__(self, other):
+        ret = Expression()
+        ret.operators = self.operators[:]
+        ret.operators.append(('__pow__', other))
+        return ret
+    
+    def __rpow__(self, other):
+        ret = Expression()
+        ret.operators = self.operators[:]
+        ret.operators.append(('__rpow__', other))
+        return ret
+
+    def abs(self):
+        ret = Expression()
+        ret.operators = self.operators[:]
+        ret.operators.append(('__abs__', None))
+        return ret
+
+    def __call__(self, x):
+        result = x
+        for operation, attrib in self.operators:
+            if isinstance(attrib, Expression):
+                attrib = attrib(x)
+            if attrib is None:
+                result = result.__getattribute__(operation)()
+            else:
+                result = result.__getattribute__(operation)(attrib)
+        return result
+
+x = Expression()
