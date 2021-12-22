@@ -31,9 +31,6 @@ class Spine(Category):
             vec.z = zfunc(abs(perlin1d(seedz, i / divz)))
             output.append(vec)
         return output
-    
-    def cast_ik(self, startpoint, endpoint):
-        pass
 
 class Animal:
     def __init__(self):

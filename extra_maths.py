@@ -105,6 +105,38 @@ class Vector2:
         vec._angle = degree
         return vec
 
+class VectorChain:
+    def __init__(self, *vecs):
+        self.vectors = vecs
+    
+    def cast_ik(self, start, dest):
+        from math import acos, pi
+        def pair_ik(a, b, start, dest):
+            newchain = []
+            c = (start - dest).length()
+            beta = (a ** 2 + c ** 2 - b ** 2) / 2 * a * b 
+            angle = 2 * pi - (acos(abs(dest.x - start.x) / abs(dest.y - start.y)) + acos(beta))
+            vec1 = Vector2.pointed(a, angle)
+            return [Vector2.pointed(a, angle),
+                    dest - vec1]
+        
+        if not self.count == 2:
+            return NotImplemented
+        return pair_ik(self.vectors[0].length(),
+                       self.vectors[1].length(),
+                       start, dest)
+
+
+    @property
+    def count(self):
+        return len(self.vectors)
+    
+    def average_length(self):
+        return self.length() / self.count
+    
+    def length(self):
+        return sum(map(lambda x: x.length(), self.vectors))
+
 def musrand(seed):
     a = int(seed)
     b = a + 1
