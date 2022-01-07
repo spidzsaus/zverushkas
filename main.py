@@ -5,6 +5,6 @@ if __name__ == '__main__':
     seed = randint(1, 99999999)
     print(seed)
     test = AnimalGenerator.mamal(seed)
-    output = AnimalDraw(test).draw(250)
+    output = AnimalDraw(test).draw(250, ground=100)
     output.show()
     

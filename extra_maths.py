@@ -96,6 +96,11 @@ class Vector2:
     
     def unit(self):
         return self / self.length()
+    
+    def mimic(self, other):
+        self.x = other.x
+        self.y = other.y
+        return self
 
     @classmethod
     def pointed(cls, length, degree):
@@ -108,24 +113,24 @@ class Vector2:
 class VectorChain:
     def __init__(self, *vecs):
         self.vectors = vecs
-    
+
     def cast_ik(self, start, dest):
         from math import acos, pi
         def pair_ik(a, b, start, dest):
-            newchain = []
             c = (start - dest).length()
-            beta = (a ** 2 + c ** 2 - b ** 2) / 2 * a * b 
-            angle = 2 * pi - (acos(abs(dest.x - start.x) / abs(dest.y - start.y)) + acos(beta))
+            beta = (a ** 2 + c ** 2 - b ** 2) / 2 * a * b
+            cosa = abs(dest.x - start.x) / abs(dest.y - start.y)
+            angle = 2 * pi - (pi / 2 + acos(beta))
             vec1 = Vector2.pointed(a, angle)
-            return [Vector2.pointed(a, angle),
-                    dest - vec1]
+            return [vec1,
+                    vec1 - dest]
         
         if not self.count == 2:
             return NotImplemented
-        return pair_ik(self.vectors[0].length(),
+        chain = pair_ik(self.vectors[0].length(),
                        self.vectors[1].length(),
                        start, dest)
-
+        return [vec1.mimic(vec2) for vec1, vec2 in zip(self.vectors, chain)]
 
     @property
     def count(self):
@@ -136,6 +141,13 @@ class VectorChain:
     
     def length(self):
         return sum(map(lambda x: x.length(), self.vectors))
+    
+    def __iter__(self):
+        return iter(self.vectors)
+
+    def __getitem__(self, key):
+        return self.vectors.__getitem__(key)
+
 
 def musrand(seed):
     a = int(seed)

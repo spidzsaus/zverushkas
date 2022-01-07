@@ -1,3 +1,4 @@
+from math import degrees
 from extra_maths import Vector2, randint
 from extra_maths import x as VARX
 from extra_types import Category, DefaultValue
@@ -11,7 +12,7 @@ class Spine(Category):
         self.default = 0
         
     def to_vectors(self):
-        from extra_maths import perlin1d, Vector2
+        from extra_maths import perlin1d, Vector2, VectorChain
         from math import pi
         output = []
         seedx = self.seed_h
@@ -30,7 +31,7 @@ class Spine(Category):
             vec = Vector2.pointed(x, y)
             vec.z = zfunc(abs(perlin1d(seedz, i / divz)))
             output.append(vec)
-        return output
+        return VectorChain(*output)
 
 class Animal:
     def __init__(self):
@@ -95,7 +96,7 @@ class AnimalDraw:
     def __init__(self, animal: Animal):
         self.animal = animal
     
-    def draw(self, scale, draw=DefaultValue, coords=Vector2(0, 0)):
+    def draw(self, scale, draw=DefaultValue, coords=Vector2(0, 0), ground=DefaultValue):
         from extra_maths import Vector2
         left = coords.x
         right = coords.x
@@ -117,6 +118,8 @@ class AnimalDraw:
             
             if i in self.animal.legs:
                 leg = self.animal.legs[i].to_vectors()
+                if ground is not DefaultValue:
+                    leg = leg.cast_ik(Vector2(0, 0), Vector2(0, coords.y - ground / scale))
                 dcoords = coords
                 legs_dots.append([(coords,)])
                 for j, bone in enumerate(leg):
@@ -138,6 +141,8 @@ class AnimalDraw:
             offset = Vector2(left, up)
             returnim = True
         
+        if ground is not DefaultValue:
+            draw.line(((0, ground), (abs(int(right - left)), ground)), fill=(0, 255, 0))
         for i, dot in enumerate(spine_dots):
             if not i: continue
             draw.line(((spine_dots[i - 1][0] - offset).tuple(), 
