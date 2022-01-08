@@ -1,5 +1,3 @@
-from math import degrees
-from typing import Protocol
 from extra_types import DefaultValue
 
 class Vector2:
@@ -117,13 +115,18 @@ class VectorChain:
     def cast_ik(self, start, dest):
         from math import acos, pi
         def pair_ik(a, b, start, dest):
-            c = (start - dest).length()
-            beta = (a ** 2 + c ** 2 - b ** 2) / 2 * a * b
-            cosa = abs(dest.x - start.x) / abs(dest.y - start.y)
-            angle = 2 * pi - (pi / 2 + acos(beta))
-            vec1 = Vector2.pointed(a, angle)
-            return [vec1,
-                    vec1 - dest]
+            v = start - dest
+            c = v.length()
+            try:
+                beta = (a ** 2 + c ** 2 - b ** 2) / 2 * a * b
+                angle = 2 * pi - (pi / 2 + acos(beta))
+                vec1 = Vector2.pointed(a, angle)
+                return [vec1,
+                        dest - start - vec1]
+            except:
+                unit = v / c
+                return [unit * a,
+                        unit * b]
         
         if not self.count == 2:
             return NotImplemented

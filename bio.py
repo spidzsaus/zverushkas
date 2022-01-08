@@ -107,55 +107,56 @@ class AnimalDraw:
         legs_dots = [] 
         for i, bone in enumerate(spine):
             bone.y *= -1
-            newcoords = coords + (bone * scale)
-            spine_dots.append((newcoords, int(bone.z * scale)))
+            newcoords = coords + bone
+            spine_dots.append((newcoords, int(bone.z)))
             coords = newcoords
-            right = max(right, newcoords.x + bone.z * scale)
-            left = min(left, newcoords.x - bone.z * scale)
-            down = max(down, newcoords.y + bone.z * scale)
-            up = min(up, newcoords.y - bone.z * scale)
+            right = max(right, newcoords.x + bone.z)
+            left = min(left, newcoords.x - bone.z)
+            down = max(down, newcoords.y + bone.z)
+            up = min(up, newcoords.y - bone.z)
 
             
             if i in self.animal.legs:
                 leg = self.animal.legs[i].to_vectors()
                 if ground is not DefaultValue:
-                    leg = leg.cast_ik(Vector2(0, 0), Vector2(0, coords.y - ground / scale))
+                    leg = leg.cast_ik(Vector2(0, 0), Vector2(0, (coords.y - ground)))
+                    print((ground - coords.y))
                 dcoords = coords
                 legs_dots.append([(coords,)])
                 for j, bone in enumerate(leg):
                     bone.y *= -1
-                    dnewcoords = dcoords + (bone * scale)
-                    legs_dots[-1].append((dnewcoords, int(bone.z * scale)))
+                    dnewcoords = dcoords + bone
+                    legs_dots[-1].append((dnewcoords, int(bone.z)))
                     dcoords = dnewcoords
-                    right = max(right, dnewcoords.x + bone.z * scale)
-                    left = min(left, dnewcoords.x - bone.z * scale)
-                    down = max(down, dnewcoords.y + bone.z * scale)
-                    up = min(up, dnewcoords.y - bone.z * scale)
+                    right = max(right, dnewcoords.x + bone.z)
+                    left = min(left, dnewcoords.x - bone.z)
+                    down = max(down, dnewcoords.y + bone.z)
+                    up = min(up, dnewcoords.y - bone.z)
 
         offset = Vector2(0, 0)
         returnim = False
         if draw is DefaultValue:
             from PIL import Image, ImageDraw
-            output = Image.new('RGBA', (abs(int(right - left)), abs(int(down - up))))
+            output = Image.new('RGBA', (abs(int(right - left) * scale), abs(int(down - up) * scale)))
             draw = ImageDraw.Draw(output)
             offset = Vector2(left, up)
             returnim = True
         
         if ground is not DefaultValue:
-            draw.line(((0, ground), (abs(int(right - left)), ground)), fill=(0, 255, 0))
+            draw.line(((0, ground * scale), (abs(int(right - left) * scale), ground * scale)), fill=(0, 255, 0))
         for i, dot in enumerate(spine_dots):
             if not i: continue
-            draw.line(((spine_dots[i - 1][0] - offset).tuple(), 
-                        (dot[0] - offset).tuple()), fill=(165, 15 * i, 255),
-                        width=dot[1])
+            draw.line((((spine_dots[i - 1][0] - offset) * scale).tuple(), 
+                        ((dot[0] - offset) * scale).tuple()), fill=(165, 15 * i, 255),
+                        width=dot[1] * scale)
         for i, leg in enumerate(legs_dots):
             for j, dot in enumerate(leg):
                 if not j: continue
-                draw.line(((leg[j - 1][0] - offset).tuple(), 
-                            (dot[0] - offset).tuple()), fill=(165, 15 * i, 255),
-                            width=dot[1])
-        draw.ellipse(((spine_dots[-1][0] - Vector2(scale / 25, scale / 25) - offset).tuple(),
-                      (spine_dots[-1][0] + Vector2(scale / 25, scale / 25) - offset).tuple()),
+                draw.line((((leg[j - 1][0] - offset) * scale).tuple(), 
+                            ((dot[0] - offset) * scale).tuple()), fill=(165, 15 * i, 255),
+                            width=dot[1] * scale)
+        draw.ellipse((((spine_dots[-1][0] - Vector2(0.04, 0.04) - offset) * scale).tuple(),
+                      ((spine_dots[-1][0] + Vector2(0.04, 0.04) - offset) * scale).tuple()),
                      fill=(255, 0, 0))
         if returnim:
             return output
