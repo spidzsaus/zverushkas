@@ -29,7 +29,7 @@ class Spine(Category):
             x = xfunc(abs(perlin1d(seedx, i / divx)))
             y = yfunc(perlin1d(seedy, i / divy) * pi)
             vec = Vector2.pointed(x, y)
-            vec.z = zfunc(abs(perlin1d(seedz, i / divz)))
+            vec.z = zfunc(abs(perlin1d(seedz, (i + 1) / divz )))
             output.append(vec)
         return VectorChain(*output)
 
