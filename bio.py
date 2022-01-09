@@ -62,7 +62,8 @@ class Animal:
             a, b = bone.angle, vecs[i - 1].angle
             a, b = max(a, b), min(a, b)
             joints.append((i - 1, abs(a - b), bone.length(), bone.z))
-        joints.sort(key=lambda x: x[1], reverse=True)
+        le = len(vecs)
+        joints.sort(key=lambda x: x[1] - abs(x[0] - le / 2) * 0.5 + randint(seed * 1023 * i, 0, 500) / 100, reverse=True)
 
         for i in range(leg_count):
             leg = Spine()

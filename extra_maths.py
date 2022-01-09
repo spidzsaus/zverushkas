@@ -115,6 +115,9 @@ class Vector2:
 class VectorChain:
     def __init__(self, *vecs):
         self.vectors = vecs
+    
+    def __len__(self):
+        return len(self.vectors)
 
     def cast_ik(self, start, dest):
         from math import acos, pi, degrees
