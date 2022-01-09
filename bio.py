@@ -73,10 +73,10 @@ class Animal:
             leg.seed_v = seed * 42839 * (i + 1)
             leg.seed_h = seed * 35231 * (i + 1)
             leg.seed_w = seed * 51618 * (i + 1)
-            #leg.hfunc = joints[i][2] + VARX.abs() * 10
+            #leg.hfunc = joints[i][2] + VARX.abs() * 100
             leg.hfunc = joints[i][2] + VARX * 0 + 0.2
             leg.vfunc = VARX - pi / 2
-            leg.wfunc = VARX * 0.6
+            leg.wfunc = VARX #* 0.6
             animal.legs[joints[i][0]] = leg
 
         return animal
@@ -121,15 +121,17 @@ class AnimalDraw:
                 legs_dots.append([(coords,)])
 
         if draw is DefaultValue:
+            bposition = position
             position += Vector2(left, -up) * scale
         for n, leg in enumerate(self.animal.legs.values()):
             leg = leg.to_vectors()
             leg_dots = legs_dots[n]
             dcoords = leg_dots[0][0]
             if ground is not DefaultValue:
-                leg = leg.cast_ik(Vector2(0, 0), Vector2(0, ((dcoords.y + up) * scale - ground)/scale))
+                leg = leg.cast_ik(Vector2(0, 0), Vector2(0, ((dcoords.y - up) * scale - ground)/scale))
             legs_dots.append([(coords,)])
             for j, bone in enumerate(leg):
+                if ground is DefaultValue: bone.y *= -1
                 dnewcoords = dcoords + bone
                 leg_dots.append((dnewcoords, bone.z))
                 dcoords = dnewcoords
@@ -137,6 +139,9 @@ class AnimalDraw:
                 left = min(left, dnewcoords.x - bone.z)
                 down = max(down, dnewcoords.y + bone.z)
                 up = min(up, dnewcoords.y - bone.z)
+        
+        if draw is DefaultValue:
+            position = bposition - Vector2(left, up) * scale
 
         returnim = False
         if draw is DefaultValue:
@@ -157,7 +162,7 @@ class AnimalDraw:
             for j, dot in enumerate(leg):
                 if not j: continue
                 draw.line((((leg[j - 1][0] * scale + position)).tuple(), 
-                            ((dot[0] * scale + position)).tuple()), fill=(165, 15 * i, 255),
+                            ((dot[0] * scale + position)).tuple()), fill=(255, 15 * i, 165),
                             width=int(dot[1] * scale))
         draw.ellipse((((spine_dots[-1][0] - Vector2(0.04, 0.04)) * scale + position).tuple(),
                       ((spine_dots[-1][0] + Vector2(0.04, 0.04)) * scale + position).tuple()),
