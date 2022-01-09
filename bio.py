@@ -73,7 +73,8 @@ class Animal:
             leg.seed_v = seed * 42839 * (i + 1)
             leg.seed_h = seed * 35231 * (i + 1)
             leg.seed_w = seed * 51618 * (i + 1)
-            leg.hfunc = joints[i][2] + VARX.abs() * 10
+            #leg.hfunc = joints[i][2] + VARX.abs() * 10
+            leg.hfunc = joints[i][2] + VARX * 0 + 0.2
             leg.vfunc = VARX - pi / 2
             leg.wfunc = VARX * 0.6
             animal.legs[joints[i][0]] = leg
@@ -94,69 +95,72 @@ class AnimalGenerator:
 
 class AnimalDraw:
     def __init__(self, animal: Animal):
+        from extra_maths import Vector2
         self.animal = animal
     
-    def draw(self, scale, draw=DefaultValue, coords=Vector2(0, 0), ground=DefaultValue):
+    def draw(self, scale, draw=DefaultValue, position=Vector2(0, 0), ground=DefaultValue):
         from extra_maths import Vector2
-        left = coords.x
-        right = coords.x
-        down = coords.y
-        up = coords.y
+        left = 0
+        right = 0
+        down = 0
+        up = 0
         spine = self.animal.spine.to_vectors()
-        spine_dots = [(coords,)]
+        coords = Vector2(0, 0)
+        spine_dots = [(Vector2(0, 0),)]
         legs_dots = [] 
         for i, bone in enumerate(spine):
             bone.y *= -1
             newcoords = coords + bone
-            spine_dots.append((newcoords, int(bone.z)))
+            spine_dots.append((newcoords, bone.z))
             coords = newcoords
             right = max(right, newcoords.x + bone.z)
             left = min(left, newcoords.x - bone.z)
             down = max(down, newcoords.y + bone.z)
-            up = min(up, newcoords.y - bone.z)
-
-            
+            up = min(up, newcoords.y - bone.z) 
             if i in self.animal.legs:
-                leg = self.animal.legs[i].to_vectors()
-                if ground is not DefaultValue:
-                    leg = leg.cast_ik(Vector2(0, 0), Vector2(0, (coords.y - ground)))
-                    print((ground - coords.y))
-                dcoords = coords
                 legs_dots.append([(coords,)])
-                for j, bone in enumerate(leg):
-                    bone.y *= -1
-                    dnewcoords = dcoords + bone
-                    legs_dots[-1].append((dnewcoords, int(bone.z)))
-                    dcoords = dnewcoords
-                    right = max(right, dnewcoords.x + bone.z)
-                    left = min(left, dnewcoords.x - bone.z)
-                    down = max(down, dnewcoords.y + bone.z)
-                    up = min(up, dnewcoords.y - bone.z)
 
-        offset = Vector2(0, 0)
+        if draw is DefaultValue:
+            position += Vector2(left, -up) * scale
+        for n, leg in enumerate(self.animal.legs.values()):
+            leg = leg.to_vectors()
+            leg_dots = legs_dots[n]
+            dcoords = leg_dots[0][0]
+            if ground is not DefaultValue:
+                leg = leg.cast_ik(Vector2(0, 0), Vector2(0, ((dcoords.y + up) * scale - ground)/scale))
+            legs_dots.append([(coords,)])
+            for j, bone in enumerate(leg):
+                dnewcoords = dcoords + bone
+                leg_dots.append((dnewcoords, bone.z))
+                dcoords = dnewcoords
+                right = max(right, dnewcoords.x + bone.z)
+                left = min(left, dnewcoords.x - bone.z)
+                down = max(down, dnewcoords.y + bone.z)
+                up = min(up, dnewcoords.y - bone.z)
+
         returnim = False
         if draw is DefaultValue:
             from PIL import Image, ImageDraw
-            output = Image.new('RGBA', (abs(int(right - left) * scale), abs(int(down - up) * scale)))
+            output = Image.new('RGBA', (int(abs(right - left) * scale), 
+                                        int(abs(down - up) * scale)))
             draw = ImageDraw.Draw(output)
-            offset = Vector2(left, up)
             returnim = True
         
         if ground is not DefaultValue:
-            draw.line(((0, ground * scale), (abs(int(right - left) * scale), ground * scale)), fill=(0, 255, 0))
+            draw.line(((0, ground), (int(abs(right - left) * scale), ground)), fill=(0, 255, 0))
         for i, dot in enumerate(spine_dots):
             if not i: continue
-            draw.line((((spine_dots[i - 1][0] - offset) * scale).tuple(), 
-                        ((dot[0] - offset) * scale).tuple()), fill=(165, 15 * i, 255),
-                        width=dot[1] * scale)
+            draw.line((((spine_dots[i - 1][0]  * scale + position)).tuple(), 
+                        ((dot[0]  * scale + position)).tuple()), fill=(165, 15 * i, 255),
+                        width=int(dot[1] * scale))
         for i, leg in enumerate(legs_dots):
             for j, dot in enumerate(leg):
                 if not j: continue
-                draw.line((((leg[j - 1][0] - offset) * scale).tuple(), 
-                            ((dot[0] - offset) * scale).tuple()), fill=(165, 15 * i, 255),
-                            width=dot[1] * scale)
-        draw.ellipse((((spine_dots[-1][0] - Vector2(0.04, 0.04) - offset) * scale).tuple(),
-                      ((spine_dots[-1][0] + Vector2(0.04, 0.04) - offset) * scale).tuple()),
+                draw.line((((leg[j - 1][0] * scale + position)).tuple(), 
+                            ((dot[0] * scale + position)).tuple()), fill=(165, 15 * i, 255),
+                            width=int(dot[1] * scale))
+        draw.ellipse((((spine_dots[-1][0] - Vector2(0.04, 0.04)) * scale + position).tuple(),
+                      ((spine_dots[-1][0] + Vector2(0.04, 0.04)) * scale + position).tuple()),
                      fill=(255, 0, 0))
         if returnim:
             return output

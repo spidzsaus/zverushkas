@@ -1,3 +1,4 @@
+import math
 from extra_types import DefaultValue
 
 class Vector2:
@@ -99,6 +100,9 @@ class Vector2:
         self.x = other.x
         self.y = other.y
         return self
+    
+    def copy(self):
+        return Vector2(self.x, self.y)
 
     @classmethod
     def pointed(cls, length, degree):
@@ -113,24 +117,24 @@ class VectorChain:
         self.vectors = vecs
 
     def cast_ik(self, start, dest):
-        from math import acos, pi
+        from math import acos, pi, degrees
         def pair_ik(a, b, start, dest):
             v = start - dest
             c = v.length()
-            try:
-                beta = (a ** 2 + c ** 2 - b ** 2) / 2 * a * b
-                angle = 2 * pi - (pi / 2 + acos(beta))
+            if a + b > c and a + c > b and b + c > a:
+                beta = (a ** 2 + c ** 2 - b ** 2) / (2 * a * c)
+                angle = acos(beta) - pi * 1.5
                 vec1 = Vector2.pointed(a, angle)
                 return [vec1,
-                        dest - start - vec1]
-            except:
+                        start - vec1 - dest]
+            else:
                 unit = v / c
                 return [unit * a,
                         unit * b]
         
         if not self.count == 2:
             return NotImplemented
-        chain = pair_ik(self.vectors[0].length(),
+        chain = pair_ik(self.vectors[0].length(), 
                        self.vectors[1].length(),
                        start, dest)
         return [vec1.mimic(vec2) for vec1, vec2 in zip(self.vectors, chain)]
