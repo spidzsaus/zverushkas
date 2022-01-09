@@ -61,7 +61,7 @@ class Animal:
             if not i: continue
             a, b = bone.angle, vecs[i - 1].angle
             a, b = max(a, b), min(a, b)
-            joints.append((i - 1, abs(a - b), bone.length()))
+            joints.append((i - 1, abs(a - b), bone.length(), bone.z))
         joints.sort(key=lambda x: x[1], reverse=True)
 
         for i in range(leg_count):
@@ -73,10 +73,10 @@ class Animal:
             leg.seed_v = seed * 42839 * (i + 1)
             leg.seed_h = seed * 35231 * (i + 1)
             leg.seed_w = seed * 51618 * (i + 1)
-            #leg.hfunc = joints[i][2] + VARX.abs() * 100
-            leg.hfunc = joints[i][2] + VARX * 0 + 0.2
+            leg.hfunc = joints[i][2] + VARX.abs() * 1.5  + 0.1
+            #leg.hfunc = joints[i][2] + VARX * 0 + 0.2
             leg.vfunc = VARX - pi / 2
-            leg.wfunc = VARX #* 0.6
+            leg.wfunc = joints[i][3] / 1.5 + VARX * 0.5
             animal.legs[joints[i][0]] = leg
 
         return animal
@@ -162,7 +162,7 @@ class AnimalDraw:
             for j, dot in enumerate(leg):
                 if not j: continue
                 draw.line((((leg[j - 1][0] * scale + position)).tuple(), 
-                            ((dot[0] * scale + position)).tuple()), fill=(255, 15 * i, 165),
+                            ((dot[0] * scale + position)).tuple()), fill=(int(255 / (j + 1)), 45 * i, 165),
                             width=int(dot[1] * scale))
         draw.ellipse((((spine_dots[-1][0] - Vector2(0.04, 0.04)) * scale + position).tuple(),
                       ((spine_dots[-1][0] + Vector2(0.04, 0.04)) * scale + position).tuple()),
