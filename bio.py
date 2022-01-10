@@ -156,6 +156,12 @@ class AnimalDraw:
             coords = newcoords
             w = bone.z
 
+           # if i in self.animal.legs:
+           #     leg = self.animal.legs[i]
+           #     if self.ground is not DefaultValue:
+           #         leg = leg.cast_ik(Vector2(0, 0), Vector2(0, ((dcoords.y - up) * scale - ground)/scale))
+           #     for j, bone in 
+
         npvertecies = np.array(vertecies)
         npfaces = np.array(faces)
         animal_mesh = mesh.Mesh(np.zeros(npfaces.shape[0], dtype=mesh.Mesh.dtype))
@@ -167,7 +173,7 @@ class AnimalDraw:
     
     def draw(self, scale, draw=DefaultValue, position=Vector2(0, 0)):
         from extra_maths import Vector2
-        ground = self.ground
+        ground = self.ground * scale
         left = 0
         right = 0
         down = 0
