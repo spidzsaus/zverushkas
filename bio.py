@@ -98,6 +98,16 @@ class AnimalDraw:
     def __init__(self, animal: Animal):
         from extra_maths import Vector2
         self.animal = animal
+        self.ground = DefaultValue
+    
+    def set_ground_level(self, level):
+        self.ground = level
+    
+    def remove_ground(self):
+        self.ground = DefaultValue
+    
+    def set_animal(self, animal):
+        self.animal = animal
     
     def save_3d(self, path):
         import numpy as np
@@ -108,12 +118,12 @@ class AnimalDraw:
             x, y = vec.tuple()
             return [x, z, y]
         
-        def cross_vertecies(vec, w):
+        def cross_vertecies(vec, w, z_offset=0):
             alpha = vec.angle
-            return [vec_to_vertex(vec + Vector2.pointed(w, alpha + pi / 2), 0),
-                    vec_to_vertex(vec, w),
-                    vec_to_vertex(vec + Vector2.pointed(w, alpha - pi / 2), 0),
-                    vec_to_vertex(vec, -w)]
+            return [vec_to_vertex(vec + Vector2.pointed(w, alpha + pi / 2), 0 + z_offset),
+                    vec_to_vertex(vec, w + z_offset),
+                    vec_to_vertex(vec + Vector2.pointed(w, alpha - pi / 2), 0 + z_offset),
+                    vec_to_vertex(vec, -w + z_offset)]
 
         spine = self.animal.spine.to_vectors()
         coords = Vector2(0, 0)
@@ -154,10 +164,10 @@ class AnimalDraw:
                 animal_mesh.vectors[i][j] = npvertecies[f[j],:]
         animal_mesh.save(path)
 
-        
     
-    def draw(self, scale, draw=DefaultValue, position=Vector2(0, 0), ground=DefaultValue):
+    def draw(self, scale, draw=DefaultValue, position=Vector2(0, 0)):
         from extra_maths import Vector2
+        ground = self.ground
         left = 0
         right = 0
         down = 0
