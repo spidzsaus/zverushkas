@@ -1,4 +1,6 @@
 from math import degrees
+
+from numpy.core.arrayprint import _get_format_function
 from extra_maths import Vector2, randint
 from extra_maths import x as VARX
 from extra_types import Category, DefaultValue
@@ -156,11 +158,38 @@ class AnimalDraw:
             coords = newcoords
             w = bone.z
 
-           # if i in self.animal.legs:
-           #     leg = self.animal.legs[i]
-           #     if self.ground is not DefaultValue:
-           #         leg = leg.cast_ik(Vector2(0, 0), Vector2(0, ((dcoords.y - up) * scale - ground)/scale))
-           #     for j, bone in 
+            if i in self.animal.legs:
+                for offset in -w, w:
+                    leg = self.animal.legs[i].to_vectors()
+                    if self.ground is not DefaultValue:
+                        leg = leg.cast_ik(Vector2(0, 0), Vector2(0, -coords.y - self.ground))
+                    dcoords = coords
+                    dw = w
+                    for j, bone in enumerate(leg):
+                        bone.y *= -1
+                        dnewcoords = dcoords + bone
+
+                        a, b, c, d = cross_vertecies(dcoords, dw, offset * j)
+                        e, f, g, h = cross_vertecies(dnewcoords, bone.z, offset * (j + 1))
+
+                        vertecies.extend([a, b, c, d, e, f, g, h])
+
+                        faces.append([vb_offset + 0, vb_offset + 4, vb_offset + 3])
+                        faces.append([vb_offset + 3, vb_offset + 4, vb_offset + 7])
+
+                        faces.append([vb_offset + 0, vb_offset + 4, vb_offset + 1])
+                        faces.append([vb_offset + 1, vb_offset + 5, vb_offset + 4])
+
+                        faces.append([vb_offset + 3, vb_offset + 2, vb_offset + 7])
+                        faces.append([vb_offset + 7, vb_offset + 6, vb_offset + 2])
+
+                        faces.append([vb_offset + 1, vb_offset + 5, vb_offset + 2])
+                        faces.append([vb_offset + 5, vb_offset + 6, vb_offset + 2])
+
+                        vb_offset += 8
+
+                        dcoords = dnewcoords
+                        dw = bone.z
 
         npvertecies = np.array(vertecies)
         npfaces = np.array(faces)
@@ -202,7 +231,7 @@ class AnimalDraw:
             leg_dots = legs_dots[n]
             dcoords = leg_dots[0][0]
             if ground is not DefaultValue:
-                leg = leg.cast_ik(Vector2(0, 0), Vector2(0, ((dcoords.y - up) * scale - ground)/scale))
+                leg = leg.cast_ik(Vector2(0, 0), Vector2(0, ((dcoords.y) * scale - ground)/scale))
             legs_dots.append([(coords,)])
             for j, bone in enumerate(leg):
                 if ground is DefaultValue: bone.y *= -1
@@ -226,7 +255,7 @@ class AnimalDraw:
             returnim = True
         
         if ground is not DefaultValue:
-            draw.line(((0, ground), (int(abs(right - left) * scale), ground)), fill=(0, 255, 0))
+            draw.line(((0, ground - up * scale), (int(abs(right - left) * scale), ground - up * scale)), fill=(0, 255, 0))
         for i, dot in enumerate(spine_dots):
             if not i: continue
             draw.line((((spine_dots[i - 1][0]  * scale + position)).tuple(), 
