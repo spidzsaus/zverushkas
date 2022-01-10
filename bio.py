@@ -99,6 +99,63 @@ class AnimalDraw:
         from extra_maths import Vector2
         self.animal = animal
     
+    def save_3d(self, path):
+        import numpy as np
+        from stl import mesh
+        from math import pi
+
+        def vec_to_vertex(vec, z):
+            x, y = vec.tuple()
+            return [x, z, y]
+        
+        def cross_vertecies(vec, w):
+            alpha = vec.angle
+            return [vec_to_vertex(vec + Vector2.pointed(w, alpha + pi / 2), 0),
+                    vec_to_vertex(vec, w),
+                    vec_to_vertex(vec + Vector2.pointed(w, alpha - pi / 2), 0),
+                    vec_to_vertex(vec, -w)]
+
+        spine = self.animal.spine.to_vectors()
+        coords = Vector2(0, 0)
+        vertecies = []
+        faces = []
+        vb_offset = 0
+        w = 0
+        for i, bone in enumerate(spine):
+            newcoords = coords + bone
+
+            a, b, c, d = cross_vertecies(coords, w)
+            e, f, g, h = cross_vertecies(newcoords, bone.z)
+
+            vertecies.extend([a, b, c, d, e, f, g, h])
+
+            faces.append([vb_offset + 0, vb_offset + 4, vb_offset + 3])
+            faces.append([vb_offset + 3, vb_offset + 4, vb_offset + 7])
+
+            faces.append([vb_offset + 0, vb_offset + 4, vb_offset + 1])
+            faces.append([vb_offset + 1, vb_offset + 5, vb_offset + 4])
+
+            faces.append([vb_offset + 3, vb_offset + 2, vb_offset + 7])
+            faces.append([vb_offset + 7, vb_offset + 6, vb_offset + 2])
+
+            faces.append([vb_offset + 1, vb_offset + 5, vb_offset + 2])
+            faces.append([vb_offset + 5, vb_offset + 6, vb_offset + 2])
+
+            vb_offset += 8
+
+            coords = newcoords
+            w = bone.z
+
+        npvertecies = np.array(vertecies)
+        npfaces = np.array(faces)
+        animal_mesh = mesh.Mesh(np.zeros(npfaces.shape[0], dtype=mesh.Mesh.dtype))
+        for i, f in enumerate(faces):
+            for j in range(3):
+                animal_mesh.vectors[i][j] = npvertecies[f[j],:]
+        animal_mesh.save(path)
+
+        
+    
     def draw(self, scale, draw=DefaultValue, position=Vector2(0, 0), ground=DefaultValue):
         from extra_maths import Vector2
         left = 0

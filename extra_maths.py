@@ -11,8 +11,8 @@ class Vector2:
     @property
     def angle(self):
         if self._angle is DefaultValue:
-            from math import arctg
-            self._angle = arctg(self.y / self.x)
+            from math import atan2
+            self._angle = atan2(self.y, self.x)
         return self._angle
 
     def tuple(self):
