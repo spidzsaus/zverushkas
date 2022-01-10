@@ -29,7 +29,7 @@ class Spine(Category):
 
         for i in range(self.length):
             x = xfunc(abs(perlin1d(seedx, i / divx)))
-            y = yfunc(perlin1d(seedy, i / divy) * pi)
+            y = yfunc(perlin1d(seedy, i / divy) * pi * 1.25)
             vec = Vector2.pointed(x, y)
             vec.z = zfunc(abs(perlin1d(seedz, (i + 1) / divz )))
             output.append(vec)
@@ -43,7 +43,7 @@ class Animal:
     @staticmethod
     def from_params(length, gradation, straightness, 
                     distribution, leg_count, seed):
-        from extra_maths import randint, perlin1d
+        from extra_maths import randint
         from math import pi
         
         animal = Animal()
