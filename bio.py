@@ -136,8 +136,8 @@ class AnimalDraw:
         for i, bone in enumerate(spine):
             newcoords = coords + bone
 
-            a, b, c, d = cross_vertecies(coords, w)
-            e, f, g, h = cross_vertecies(newcoords, bone.z)
+            a, b, c, d = cross_vertecies(coords, w / 2)
+            e, f, g, h = cross_vertecies(newcoords, bone.z / 2)
 
             vertecies.extend([a, b, c, d, e, f, g, h])
 
@@ -169,8 +169,8 @@ class AnimalDraw:
                         bone.y *= -1
                         dnewcoords = dcoords + bone
 
-                        a, b, c, d = cross_vertecies(dcoords, dw, offset * j)
-                        e, f, g, h = cross_vertecies(dnewcoords, bone.z, offset * (j + 1))
+                        a, b, c, d = cross_vertecies(dcoords, dw / 2, offset * j)
+                        e, f, g, h = cross_vertecies(dnewcoords, bone.z / 2, offset * (j + 1))
 
                         vertecies.extend([a, b, c, d, e, f, g, h])
 
