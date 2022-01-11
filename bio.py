@@ -1,6 +1,3 @@
-from math import degrees
-
-from numpy.core.arrayprint import _get_format_function
 from extra_maths import Vector2, randint
 from extra_maths import x as VARX
 from extra_types import Category, DefaultValue
@@ -46,6 +43,8 @@ class Animal:
         from extra_maths import randint
         from math import pi
         
+        leg_count = min(leg_count, length - 1)
+
         animal = Animal()
         spine = Spine()
         spine.length = length
@@ -97,7 +96,7 @@ class AnimalGenerator:
 
 
 class AnimalDraw:
-    def __init__(self, animal: Animal):
+    def __init__(self, animal=None):
         from extra_maths import Vector2
         self.animal = animal
         self.ground = DefaultValue
@@ -202,7 +201,9 @@ class AnimalDraw:
     
     def draw(self, scale, draw=DefaultValue, position=Vector2(0, 0)):
         from extra_maths import Vector2
-        ground = self.ground * scale
+        ground = self.ground
+        if ground is not DefaultValue: 
+            ground *= scale
         left = 0
         right = 0
         down = 0
@@ -274,3 +275,36 @@ class AnimalDraw:
             return output
         
 
+class Preset:
+    def __init__(self, length=(7, 15), gradation=(0.2, 50.), 
+                 straightness=(0.02, 10.0), distribution=(5.0, 50.0), leg_count=(1, 4)):
+        self.length = length
+        self.gradation = gradation
+        self.straightness = straightness
+        self.distribution = distribution
+        self.leg_count = leg_count
+    
+    def generate(self, seed, accuracy=1):
+        salt = [52961]
+        def param(source):
+            if isinstance(source, tuple):
+                salt[0] *= 1230
+                return randint(seed * salt[0], source[0] * accuracy, 
+                                             source[1] * accuracy) / accuracy
+            else:
+                return source
+
+        length = param(self.length)
+        gradation = param(self.gradation)
+        staightness = param(self.straightness)
+        distribution = param(self.distribution)
+        leg_count = param(self.leg_count)
+        
+        animal = Animal.from_params(length=int(length), gradation=gradation,
+                                    straightness=staightness, distribution=distribution,
+                                    leg_count=int(leg_count), seed=seed)
+
+        return animal
+    
+    def __call__(self, seed):
+        return self.generate(seed)
