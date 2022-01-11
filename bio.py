@@ -26,7 +26,7 @@ class Spine(Category):
 
         for i in range(self.length):
             x = xfunc(abs(perlin1d(seedx, i / divx)))
-            y = yfunc(perlin1d(seedy, i / divy) * pi * 1.25)
+            y = yfunc(perlin1d(seedy, i / divy) * pi * 1.15)
             vec = Vector2.pointed(x, y)
             vec.z = zfunc(abs(perlin1d(seedz, (i + 1) / divz )))
             output.append(vec)
@@ -78,7 +78,7 @@ class Animal:
             leg.hfunc = joints[i][2] + VARX.abs() * 1.5  + 0.1
             #leg.hfunc = joints[i][2] + VARX * 0 + 0.2
             leg.vfunc = VARX - pi / 2
-            leg.wfunc = joints[i][3] / 1.5 + VARX * 0.5
+            leg.wfunc = joints[i][3] / 2 + VARX * 0.3
             animal.legs[joints[i][0]] = leg
 
         return animal
