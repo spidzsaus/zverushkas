@@ -323,4 +323,4 @@ class Preset:
         return animal
     
     def __call__(self, seed, paramseed=DefaultValue):
-        return self.generate(seed, paramseed)
+        return self.generate(seed, paramseed=paramseed)
