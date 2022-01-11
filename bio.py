@@ -36,21 +36,35 @@ class Animal:
     def __init__(self):
         self.spine = Spine()
         self.legs = {}
+
+    def to_array(self):
+        import numpy as np
+        return np.array([self.spine.length,
+                         self.spine.gradation,
+                         self.spine.straightness,
+                         self.spine.distribution,
+                         len(self.legs)
+                         ])
     
+    @classmethod
+    def from_array(cls, seed, array):
+        return cls.from_params(*[param for param in array], seed)
+
     @staticmethod
     def from_params(length, gradation, straightness, 
                     distribution, leg_count, seed):
         from extra_maths import randint
         from math import pi
         
-        leg_count = min(leg_count, length - 1)
+        leg_count = int(min(leg_count, length - 1))
 
         animal = Animal()
         spine = Spine()
-        spine.length = length
+        spine.length = int(length)
         spine.gradation = gradation
         spine.straightness = straightness
         spine.distribution = distribution
+        animal.seed = seed
         spine.seed_v = seed * 10221
         spine.seed_h = seed * 26714
         spine.seed_w = seed * 51356
@@ -284,13 +298,15 @@ class Preset:
         self.distribution = distribution
         self.leg_count = leg_count
     
-    def generate(self, seed, accuracy=1):
+    def generate(self, seed, accuracy=1, paramseed=DefaultValue):
+        if paramseed is DefaultValue:
+            paramseed = seed
         salt = [52961]
         def param(source):
             if isinstance(source, tuple):
                 salt[0] *= 1230
-                return randint(seed * salt[0], source[0] * accuracy, 
-                                             source[1] * accuracy) / accuracy
+                return randint(paramseed * salt[0], source[0] * accuracy, 
+                                                    source[1] * accuracy) / accuracy
             else:
                 return source
 
@@ -306,5 +322,5 @@ class Preset:
 
         return animal
     
-    def __call__(self, seed):
-        return self.generate(seed)
+    def __call__(self, seed, paramseed=DefaultValue):
+        return self.generate(seed, paramseed)
