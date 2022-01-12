@@ -1,4 +1,3 @@
-import math
 from extra_types import DefaultValue
 
 class Vector2:
