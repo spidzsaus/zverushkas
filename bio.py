@@ -290,15 +290,15 @@ class AnimalDraw:
         
 
 class Preset:
-    def __init__(self, length=(7, 15), gradation=(0.2, 50.), 
-                 straightness=(0.02, 10.0), distribution=(5.0, 50.0), leg_count=(1, 4)):
+    def __init__(self, length=(9, 15), gradation=(0.2, 50.), 
+                 straightness=(2, 20.0), distribution=(10.0, 50.0), leg_count=(1, 4)):
         self.length = length
         self.gradation = gradation
         self.straightness = straightness
         self.distribution = distribution
         self.leg_count = leg_count
     
-    def generate(self, seed, accuracy=1, paramseed=DefaultValue):
+    def generate(self, seed, accuracy=100, paramseed=DefaultValue):
         if paramseed is DefaultValue:
             paramseed = seed
         salt = [52961]
