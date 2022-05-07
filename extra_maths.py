@@ -10,9 +10,12 @@ class Vector2:
     @property
     def angle(self):
         if self._angle is DefaultValue:
-            from math import atan2
-            self._angle = atan2(self.y, self.x)
+            self._angle = self.calc_angle()
         return self._angle
+    
+    def calc_angle(self):
+        from math import atan2
+        return atan2(self.y, self.x)
 
     def tuple(self):
         return (self.x, self.y)

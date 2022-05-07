@@ -133,8 +133,8 @@ class AnimalDraw:
             x, y = vec.tuple()
             return [x, z, y]
         
-        def cross_vertecies(vec, w, z_offset=0):
-            alpha = vec.angle
+        def cross_vertecies(vec, w, z_offset=0, alpha=None):
+            if alpha is None: alpha = vec.angle
             return [vec_to_vertex(vec + Vector2.pointed(w, alpha + pi / 2), 0 + z_offset),
                     vec_to_vertex(vec, w + z_offset),
                     vec_to_vertex(vec + Vector2.pointed(w, alpha - pi / 2), 0 + z_offset),
@@ -146,13 +146,27 @@ class AnimalDraw:
         faces = []
         vb_offset = 0
         w = 0
+        local_leg_vb_size = 0
         for i, bone in enumerate(spine):
             newcoords = coords + bone
 
-            a, b, c, d = cross_vertecies(coords, w / 2)
-            e, f, g, h = cross_vertecies(newcoords, bone.z / 2)
+            a, b, c, d = cross_vertecies(coords, w / 2, alpha=bone.angle)
+            e, f, g, h = cross_vertecies(newcoords, bone.z / 2, alpha=bone.angle)
 
             vertecies.extend([a, b, c, d, e, f, g, h])
+
+            if i > 0:
+                faces.append([vb_offset - 4 - local_leg_vb_size, vb_offset + 0, vb_offset - 1 - local_leg_vb_size])
+                faces.append([vb_offset - 1 - local_leg_vb_size, vb_offset + 0, vb_offset + 3])
+
+                faces.append([vb_offset - 4 - local_leg_vb_size, vb_offset + 0, vb_offset - 3 - local_leg_vb_size])
+                faces.append([vb_offset - 3 - local_leg_vb_size, vb_offset + 1, vb_offset + 0])
+
+                faces.append([vb_offset - 1 - local_leg_vb_size, vb_offset - 2 - local_leg_vb_size, vb_offset + 3])
+                faces.append([vb_offset + 3, vb_offset + 2, vb_offset - 2 - local_leg_vb_size])
+
+                faces.append([vb_offset - 3 - local_leg_vb_size, vb_offset + 1, vb_offset - 2 - local_leg_vb_size])
+                faces.append([vb_offset + 1, vb_offset + 2, vb_offset - 2 - local_leg_vb_size])
 
             faces.append([vb_offset + 0, vb_offset + 4, vb_offset + 3])
             faces.append([vb_offset + 3, vb_offset + 4, vb_offset + 7])
@@ -170,7 +184,7 @@ class AnimalDraw:
 
             coords = newcoords
             w = bone.z
-
+            local_leg_vb_size = 0
             if i in self.animal.legs:
                 for offset in -w, w:
                     leg = self.animal.legs[i].to_vectors()
@@ -181,11 +195,23 @@ class AnimalDraw:
                     for j, bone in enumerate(leg):
                         bone.y *= -1
                         dnewcoords = dcoords + bone
-
-                        a, b, c, d = cross_vertecies(dcoords, dw / 2, offset * j)
-                        e, f, g, h = cross_vertecies(dnewcoords, bone.z / 2, offset * (j + 1))
+                        bone._angle = bone.calc_angle()
+                        a, b, c, d = cross_vertecies(dcoords, dw / 2, offset * j, alpha=bone.angle)
+                        e, f, g, h = cross_vertecies(dnewcoords, bone.z / 2, offset * (j + 1), alpha=bone.angle)
 
                         vertecies.extend([a, b, c, d, e, f, g, h])
+                        if j > 0:
+                            faces.append([vb_offset - 4, vb_offset + 0, vb_offset - 1])
+                            faces.append([vb_offset - 1, vb_offset + 0, vb_offset + 3])
+
+                            faces.append([vb_offset - 4, vb_offset + 0, vb_offset - 3])
+                            faces.append([vb_offset - 3, vb_offset + 1, vb_offset + 0])
+
+                            faces.append([vb_offset - 1, vb_offset - 2, vb_offset + 3])
+                            faces.append([vb_offset + 3, vb_offset + 2, vb_offset - 2])
+
+                            faces.append([vb_offset - 3, vb_offset + 1, vb_offset - 2])
+                            faces.append([vb_offset + 1, vb_offset + 2, vb_offset - 2])
 
                         faces.append([vb_offset + 0, vb_offset + 4, vb_offset + 3])
                         faces.append([vb_offset + 3, vb_offset + 4, vb_offset + 7])
@@ -200,6 +226,7 @@ class AnimalDraw:
                         faces.append([vb_offset + 5, vb_offset + 6, vb_offset + 2])
 
                         vb_offset += 8
+                        local_leg_vb_size += 8
 
                         dcoords = dnewcoords
                         dw = bone.z
