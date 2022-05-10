@@ -6,6 +6,7 @@ class Spine(Category):
     vfunc = VARX
     hfunc = VARX
     wfunc = VARX
+    sfunc = VARX
 
     def __init__(self):
         self.default = 0
@@ -17,18 +18,22 @@ class Spine(Category):
         seedx = self.seed_h
         seedy = self.seed_v
         seedz = self.seed_w
+        seeds = self.seed_s
         divx = self.gradation
         divy = self.straightness
         divz = self.distribution
+        divs = self.spreadvalue
         xfunc = self.hfunc
         yfunc = self.vfunc
         zfunc = self.wfunc
+        sfunc = self.sfunc
 
         for i in range(self.length):
             x = xfunc(abs(perlin1d(seedx, i / divx)))
             y = yfunc(perlin1d(seedy, i / divy) * pi * 1.15)
             vec = Vector2.pointed(x, y)
             vec.z = zfunc(abs(perlin1d(seedz, (i + 1) / divz )))
+            vec.a = sfunc(abs(perlin1d(seeds, (i + 1) / divs )))
             output.append(vec)
         return VectorChain(*output)
 
@@ -43,6 +48,7 @@ class Animal:
                          self.spine.gradation,
                          self.spine.straightness,
                          self.spine.distribution,
+                         self.spine.spreadvalue,
                          len(self.legs)
                          ])
     
@@ -52,7 +58,7 @@ class Animal:
 
     @staticmethod
     def from_params(length, gradation, straightness, 
-                    distribution, leg_count, seed):
+                    distribution, spreadvalue, leg_count, seed):
         from extra_maths import randint
         from math import pi
         
@@ -64,10 +70,12 @@ class Animal:
         spine.gradation = gradation
         spine.straightness = straightness
         spine.distribution = distribution
+        spine.spreadvalue = spreadvalue
         animal.seed = seed
         spine.seed_v = seed * 10221
         spine.seed_h = seed * 26714
         spine.seed_w = seed * 51356
+        spine.seed_s = seed * 51356
         animal.spine = spine
         
         joints = []
@@ -85,10 +93,12 @@ class Animal:
             leg.gradation = 100
             leg.straightness = straightness
             leg.distribution = distribution
+            leg.spreadvalue = spreadvalue
             leg.length = 2
             leg.seed_v = seed * 42839 * (i + 1)
             leg.seed_h = seed * 35231 * (i + 1)
             leg.seed_w = seed * 51618 * (i + 1)
+            leg.seed_s = seed * 25345 * (i + 1)
             leg.hfunc = joints[i][2] + VARX.abs() * 1.5  + 0.1
             #leg.hfunc = joints[i][2] + VARX * 0 + 0.2
             leg.vfunc = VARX - pi / 2
@@ -96,18 +106,6 @@ class Animal:
             animal.legs[joints[i][0]] = leg
 
         return animal
-
-class AnimalGenerator:
-    @staticmethod
-    def mamal(seed):
-        length = randint(seed * 199, 5, 15)
-        gradation = randint(seed * 235, 1, 1000) / 100
-        straightness = randint(seed, 500, 1000) / 100
-        distribution = randint(seed, 500, 1000) / 100
-        leg_count = 2
-        return Animal.from_params(length, gradation, straightness, distribution,
-                                  leg_count, seed)
-
 
 class AnimalDraw:
     def __init__(self, animal=None):
@@ -133,12 +131,12 @@ class AnimalDraw:
             x, y = vec.tuple()
             return [x, z, y]
         
-        def cross_vertecies(vec, w, z_offset=0, alpha=None):
+        def cross_vertecies(vec, w, z_offset=0, alpha=None, spread=0):
             if alpha is None: alpha = vec.angle
             return [vec_to_vertex(vec + Vector2.pointed(w, alpha + pi / 2), 0 + z_offset),
-                    vec_to_vertex(vec, w + z_offset),
+                    vec_to_vertex(vec, w + z_offset + spread),
                     vec_to_vertex(vec + Vector2.pointed(w, alpha - pi / 2), 0 + z_offset),
-                    vec_to_vertex(vec, -w + z_offset)]
+                    vec_to_vertex(vec, -w + z_offset - spread)]
 
         spine = self.animal.spine.to_vectors()
         coords = Vector2(0, 0)
@@ -146,12 +144,13 @@ class AnimalDraw:
         faces = []
         vb_offset = 0
         w = 0
+        spr = 0
         local_leg_vb_size = 0
         for i, bone in enumerate(spine):
             newcoords = coords + bone
 
-            a, b, c, d = cross_vertecies(coords, w / 2, alpha=bone.angle)
-            e, f, g, h = cross_vertecies(newcoords, bone.z / 2, alpha=bone.angle)
+            a, b, c, d = cross_vertecies(coords, w / 2, alpha=bone.angle, spread=spr)
+            e, f, g, h = cross_vertecies(newcoords, bone.z / 2, alpha=bone.angle, spread=bone.a)
 
             vertecies.extend([a, b, c, d, e, f, g, h])
 
@@ -184,20 +183,23 @@ class AnimalDraw:
 
             coords = newcoords
             w = bone.z
+            spr = bone.a
+            origin = w
             local_leg_vb_size = 0
             if i in self.animal.legs:
-                for offset in -w, w:
+                for offset in -1, 1:
                     leg = self.animal.legs[i].to_vectors()
                     if self.ground is not DefaultValue:
                         leg = leg.cast_ik(Vector2(0, 0), Vector2(0, -coords.y - self.ground))
                     dcoords = coords
                     dw = w
+                    dspread = origin
                     for j, bone in enumerate(leg):
                         bone.y *= -1
                         dnewcoords = dcoords + bone
                         bone._angle = bone.calc_angle()
-                        a, b, c, d = cross_vertecies(dcoords, dw / 2, offset * j, alpha=bone.angle)
-                        e, f, g, h = cross_vertecies(dnewcoords, bone.z / 2, offset * (j + 1), alpha=bone.angle)
+                        a, b, c, d = cross_vertecies(dcoords, dw / 2, w * offset * j + offset * dspread , alpha=bone.angle)
+                        e, f, g, h = cross_vertecies(dnewcoords, bone.z / 2, w * offset * (j + 1) + offset * bone.a, alpha=bone.angle)
 
                         vertecies.extend([a, b, c, d, e, f, g, h])
                         if j > 0:
@@ -230,6 +232,7 @@ class AnimalDraw:
 
                         dcoords = dnewcoords
                         dw = bone.z
+                        dspread = bone.a
 
         npvertecies = np.array(vertecies)
         npfaces = np.array(faces)
@@ -239,6 +242,59 @@ class AnimalDraw:
                 animal_mesh.vectors[i][j] = npvertecies[f[j],:]
         animal_mesh.save(path)
 
+    def draw_from_above(self, scale, draw=DefaultValue, position=Vector2(0, 0)):
+        from extra_maths import Vector2
+        maxwidth = 0
+        spine = self.animal.spine.to_vectors()
+        length = 0
+        spine_dots = [(0,0)]
+        legs_dots = [] 
+        for i, bone in enumerate(spine):
+            length += bone.x
+            spine_dots.append((length, bone.z + bone.a))
+            if i in self.animal.legs:
+                legs_dots.append([(length, bone.z + bone.a, )])
+
+        if draw is DefaultValue:
+            position.x += maxwidth / 2
+        for n, leg in enumerate(self.animal.legs.values()):
+            leg = leg.to_vectors()
+            leg_dots = legs_dots[n]
+            originx = leg_dots[0][0]
+            originz = leg_dots[0][1]
+            
+            for j, bone in enumerate(leg):
+                dz = bone.z * j + bone.a
+                leg_dots.append((originx, dz, bone.z))
+                if dz + originz > maxwidth:
+                    maxwidth = dz + originz
+
+        returnim = False
+        if draw is DefaultValue:
+            from PIL import Image, ImageDraw
+            output = Image.new('RGBA', (int(length * scale + 10), 
+                                        int(maxwidth * 2 * scale)))
+            draw = ImageDraw.Draw(output)
+            returnim = True
+        
+        for i, dot in enumerate(spine_dots):
+            if not i: continue
+            draw.line(((int(spine_dots[i - 1][0] * scale + position.y), int(maxwidth * scale + position.x)), 
+                       (int(spine_dots[i][0]  * scale + position.y), int(maxwidth * scale + position.x), )
+                        ), fill=(165, 15 * i, 255),
+                        width=int(spine_dots[i][1] * scale))
+        for i, leg in enumerate(legs_dots):
+            dx = maxwidth * scale + position.x
+            for j, dot in enumerate(leg):
+                if not j: continue
+                draw.line(((int(dot[0]  * scale), int(dx + leg[j - 1][1] * scale)),
+                           (int(dot[0]  * scale), int(dx + dot[1] * scale))), fill=(int(255 / (j + 1)), 45 * i, 165),
+                            width=int(dot[2] * scale))
+                draw.line(((int(dot[0]  * scale), int(dx - leg[j - 1][1] * scale)),
+                           (int(dot[0]  * scale), int(dx - dot[1] * scale))), fill=(int(255 / (j + 1)), 45 * i, 165),
+                            width=int(dot[2] * scale))
+        if returnim:
+            return output
     
     def draw(self, scale, draw=DefaultValue, position=Vector2(0, 0)):
         from extra_maths import Vector2

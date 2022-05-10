@@ -3,9 +3,12 @@ from extra_types import DefaultValue
 class Vector2:
     _angle = DefaultValue
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, z=0, a=0, b=0):
         self.x = x
         self.y = y
+        self.z = z
+        self.a = a
+        self.b = b
 
     @property
     def angle(self):
@@ -21,37 +24,46 @@ class Vector2:
         return (self.x, self.y)
 
     def __add__(self, other):
-        return Vector2(self.x + other.x, self.y + other.y)
+        return Vector2(self.x + other.x, self.y + other.y,
+                       self.z, self.a, self.b)
 
     def __sub__(self, other):
-        return Vector2(self.x - other.x, self.y - other.y)
+        return Vector2(self.x - other.x, self.y - other.y,
+                       self.z, self.a, self.b)
 
     def __mul__(self, other):
-        return Vector2(self.x * other, self.y * other)
+        return Vector2(self.x * other, self.y * other,
+                       self.z, self.a, self.b)
 
     def __truediv__(self, other):
-        return Vector2(self.x / other, self.y / other)
+        return Vector2(self.x / other, self.y / other,
+                       self.z, self.a, self.b)
 
     def __floordiv__(self, other):
-        return Vector2(self.x // other, self.y // other)
+        return Vector2(self.x // other, self.y // other,
+                       self.z, self.a, self.b)
 
     def __mod__(self, other):
-        return Vector2(self.x % other, self.y % other)
+        return Vector2(self.x % other, self.y % other,
+                       self.z, self.a, self.b)
 
     def __eq__(self, other):
         return self.tuple() == other.tuple()
 
     def round(self):
-        return Vector2(round(self.x), round(self.y))
+        return Vector2(round(self.x), round(self.y),
+                       self.z, self.a, self.b)
 
     def int(self):
-        return Vector2(int(self.x), int(self.y))
+        return Vector2(int(self.x), int(self.y),
+                       self.z, self.a, self.b)
 
     def __iter__(self):
         return self.tuple().__iter__()
 
     def map(self, f):
-        return Vector2(f(self.x), f(self.y))
+        return Vector2(f(self.x), f(self.y),
+                       self.z, self.a, self.b)
 
     def __hash__(self):
         return hash(self.tuple())
@@ -104,7 +116,7 @@ class Vector2:
         return self
     
     def copy(self):
-        return Vector2(self.x, self.y)
+        return Vector2(self.x, self.y, self.z, self.a, self.b)
 
     @classmethod
     def pointed(cls, length, degree):
