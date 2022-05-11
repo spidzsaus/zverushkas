@@ -1,3 +1,4 @@
+from operator import pos
 from extra_maths import Vector2, randint
 from extra_maths import x as VARX
 from extra_types import Category, DefaultValue
@@ -355,6 +356,8 @@ class AnimalDraw:
         from extra_maths import Vector2
         maxwidth = 0
         spine = self.animal.spine.to_vectors()
+        head = self.animal.head.to_vectors((self.animal.spine, 1.5))
+        spine += head
         length = 0
         spine_dots = [(0,0)]
         legs_dots = [] 
@@ -404,8 +407,110 @@ class AnimalDraw:
                             width=int(dot[2] * scale))
         if returnim:
             return output
-    
+
     def draw(self, scale, draw=DefaultValue, position=Vector2(0, 0)):
+        from math import pi
+        ground = self.ground
+
+        right, left, down, up = 0, 0, 0, 0
+
+        def edges(vec, up, down, alpha=None):
+            if alpha is None: alpha = vec.angle
+            return [(vec + Vector2.pointed(up, alpha + pi / 2)),
+                    (vec + Vector2.pointed(down, alpha - pi / 2))]
+
+        spine = self.animal.spine.to_vectors()
+        coords = Vector2(0, 0)
+        objects = []
+        w = 0
+        hh = 0
+        for i, bone in enumerate(spine):
+            objects.append([[], []])
+            newcoords = coords + bone
+
+            a, b = edges(coords, hh, w, alpha=bone.angle)
+            c, d = edges(newcoords, bone.b, bone.z, alpha=bone.angle)
+            
+            right = max([right, a.x, b.x, c.x, d.x])
+            left = min([left, a.x, b.x, c.x, d.x])
+            down = max([down, a.y, b.y, c.y, d.y])
+            up =  min([up, a.y, b.y, c.y, d.y])
+
+            objects[-1][0].extend([a, c])
+            objects[-1][1].extend([b, d])
+
+            coords = newcoords
+            w = bone.z
+            hh = bone.b
+            if i in self.animal.legs:
+                leg = self.animal.legs[i].to_vectors()
+                if self.ground is not DefaultValue:
+                    leg = leg.cast_ik(Vector2(0, 0), Vector2(0, -coords.y - self.ground))
+                dcoords = coords
+                dw = w
+                dh = hh
+                for j, bone in enumerate(leg):
+                    objects.append([[], []])
+                    bone.y *= -1
+                    dnewcoords = dcoords + bone
+                    bone._angle = bone.calc_angle()
+                    a, b = edges(dcoords, dh, dw, alpha=bone.angle)
+                    c, d = edges(dnewcoords, bone.b, bone.z, alpha=bone.angle)    
+
+                    right = max([right, a.x, b.x, c.x, d.x])
+                    left = min([left, a.x, b.x, c.x, d.x])
+                    down = max([down, a.y, b.y, c.y, d.y])
+                    up =  min([up, a.y, b.y, c.y, d.y])
+
+                    objects[-1][0].extend([a, c])
+                    objects[-1][1].extend([b, d])
+                    dcoords = dnewcoords
+                    dw = bone.z
+                    dh = bone.b
+
+        head = self.animal.head.to_vectors((self.animal.spine, 1.5))
+        objects.append([[], []])
+        for i, bone in enumerate(head):
+            newcoords = coords + bone
+            a, b = edges(coords, hh, w, alpha=bone.angle)
+            c, d = edges(newcoords, bone.b, bone.z, alpha=bone.angle)
+
+            right = max([right, a.x, b.x, c.x, d.x])
+            left = min([left, a.x, b.x, c.x, d.x])
+            down = max([down, a.y, b.y, c.y, d.y])
+            up =  min([up, a.y, b.y, c.y, d.y])
+
+            objects[-1][0].extend([a, c])
+            objects[-1][1].extend([b, d])
+
+            coords = newcoords
+            w = bone.z
+            hh = bone.b
+        
+        returnim = False
+        if draw is DefaultValue:
+            from PIL import Image, ImageDraw
+            output = Image.new('RGBA', (int(abs(right - left) * scale), 
+                                        int(abs(down - up) * scale)))
+            draw = ImageDraw.Draw(output)
+            returnim = True
+            position = position - Vector2(left, up) * scale
+        
+        if ground is not DefaultValue:
+            draw.line(((0, ground - up * scale), (int(abs(right - left) * scale), ground - up * scale)), fill=(0, 255, 0))
+        for color, obj in enumerate(objects):
+            dots = obj[0] + list(reversed(obj[1]))
+            for i in range(len(dots)):
+                dots[i] *= scale
+                dots[i] += position
+                dots[i].y = int(abs(down - up) * scale) - dots[i].y
+                dots[i] = dots[i].tuple()
+            draw.polygon(dots, fill=(165, 15 * color, 255))
+        if returnim:
+            return output
+
+    
+    def draw_old(self, scale, draw=DefaultValue, position=Vector2(0, 0)):
         from extra_maths import Vector2
         ground = self.ground
         if ground is not DefaultValue: 
