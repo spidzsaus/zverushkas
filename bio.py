@@ -37,22 +37,24 @@ class Spine(Category):
             output.append(vec)
         return VectorChain(*output)
 
-def head(seed, complexity=2) -> Spine:
+def head(seed, complexity=5) -> Spine:
     spine = Spine()
     spine.length = int(complexity)
-    spine.gradation = 0
-    spine.straightness = 0
-    spine.distribution = 0
-    spine.spreadvalue = 0
+    spine.gradation = 10
+    spine.straightness = 30
+    spine.distribution = 100
+    spine.spreadvalue = 4
     spine.seed_v = seed * 92343
     spine.seed_h = seed * 42931
     spine.seed_w = seed * 41899
     spine.seed_s = seed * 58027
+    return spine
 
 
 class Animal:
     def __init__(self):
         self.spine = Spine()
+        self.head = Spine()
         self.legs = {}
 
     def to_array(self):
@@ -95,11 +97,14 @@ class Animal:
         vecs = spine.to_vectors()
         for i, bone in enumerate(vecs):
             if not i: continue
-            a, b = bone.angle, vecs[i - 1].angle
-            a, b = max(a, b), min(a, b)
-            joints.append((i - 1, abs(a - b), bone.length(), bone.z))
+            v1, v2 = bone, vecs[i-1]
+            try:
+                comparator = 1 - (v1.dot_product(v2) / (v1.length() * v2.length()))
+            except ZeroDivisionError:
+                comparator = 0
+            joints.append((i - 1, comparator, bone.length(), bone.z))
         le = len(vecs)
-        joints.sort(key=lambda x: x[1] - abs(x[0] - le / 2) * 0.5 + randint(seed * 1023 * i, 0, 500) / 100, reverse=True)
+        joints.sort(key=lambda x: x[1], reverse=True)
 
         for i in range(leg_count):
             leg = Spine()
@@ -117,6 +122,7 @@ class Animal:
             leg.vfunc = VARX - pi / 2
             leg.wfunc = joints[i][3] / 2 + VARX * 0.3
             animal.legs[joints[i][0]] = leg
+        animal.head = head(seed * 931872123)
 
         return animal
 
@@ -212,10 +218,13 @@ class AnimalDraw:
                         dnewcoords = dcoords + bone
                         bone._angle = bone.calc_angle()
                         a, b, c, d = cross_vertecies(dcoords, dw / 2, w * offset * j + offset * dspread , alpha=bone.angle)
-                        e, f, g, h = cross_vertecies(dnewcoords, bone.z / 2, w * offset * (j + 1) + offset * bone.a, alpha=bone.angle)
+                        e, f, g, h = cross_vertecies(dnewcoords, bone.z / 2, w * offset * (j + 1) + offset * bone.a, alpha=bone.angle)                            
 
                         vertecies.extend([a, b, c, d, e, f, g, h])
-                        if j > 0:
+                        if not j:
+                            faces.append([vb_offset + 0, vb_offset + 1, vb_offset + 2])
+                            faces.append([vb_offset + 0, vb_offset + 2, vb_offset + 3])
+                        else:
                             faces.append([vb_offset - 4, vb_offset + 0, vb_offset - 1])
                             faces.append([vb_offset - 1, vb_offset + 0, vb_offset + 3])
 
@@ -246,6 +255,48 @@ class AnimalDraw:
                         dcoords = dnewcoords
                         dw = bone.z
                         dspread = bone.a
+        addw = w * 2
+        head = self.animal.head.to_vectors()
+        for i, bone in enumerate(head):
+            newcoords = coords + bone
+
+            a, b, c, d = cross_vertecies(coords, addw + w / 2, alpha=bone.angle, spread=spr)
+            e, f, g, h = cross_vertecies(newcoords, addw + bone.z / 2, alpha=bone.angle, spread=bone.a)
+
+            vertecies.extend([a, b, c, d, e, f, g, h])
+
+            if i > 0:
+                faces.append([vb_offset - 4 - local_leg_vb_size, vb_offset + 0, vb_offset - 1 - local_leg_vb_size])
+                faces.append([vb_offset - 1 - local_leg_vb_size, vb_offset + 0, vb_offset + 3])
+
+                faces.append([vb_offset - 4 - local_leg_vb_size, vb_offset + 0, vb_offset - 3 - local_leg_vb_size])
+                faces.append([vb_offset - 3 - local_leg_vb_size, vb_offset + 1, vb_offset + 0])
+
+                faces.append([vb_offset - 1 - local_leg_vb_size, vb_offset - 2 - local_leg_vb_size, vb_offset + 3])
+                faces.append([vb_offset + 3, vb_offset + 2, vb_offset - 2 - local_leg_vb_size])
+
+                faces.append([vb_offset - 3 - local_leg_vb_size, vb_offset + 1, vb_offset - 2 - local_leg_vb_size])
+                faces.append([vb_offset + 1, vb_offset + 2, vb_offset - 2 - local_leg_vb_size])
+
+            faces.append([vb_offset + 0, vb_offset + 4, vb_offset + 3])
+            faces.append([vb_offset + 3, vb_offset + 4, vb_offset + 7])
+
+            faces.append([vb_offset + 0, vb_offset + 4, vb_offset + 1])
+            faces.append([vb_offset + 1, vb_offset + 5, vb_offset + 4])
+
+            faces.append([vb_offset + 3, vb_offset + 2, vb_offset + 7])
+            faces.append([vb_offset + 7, vb_offset + 6, vb_offset + 2])
+
+            faces.append([vb_offset + 1, vb_offset + 5, vb_offset + 2])
+            faces.append([vb_offset + 5, vb_offset + 6, vb_offset + 2])
+
+            vb_offset += 8
+
+            coords = newcoords
+            w = bone.z
+            spr = bone.a
+            origin = w
+            local_leg_vb_size = 0
 
         npvertecies = np.array(vertecies)
         npfaces = np.array(faces)
@@ -387,11 +438,13 @@ class AnimalDraw:
 
 class Preset:
     def __init__(self, length=(9, 15), gradation=(0.2, 50.), 
-                 straightness=(2, 20.0), distribution=(10.0, 50.0), leg_count=(1, 4)):
+                 straightness=(2, 20.0), distribution=(10.0, 50.0), leg_count=(1, 4),
+                 spreadvalue=(10.0, 50.0)):
         self.length = length
         self.gradation = gradation
         self.straightness = straightness
         self.distribution = distribution
+        self.spreadvalue = spreadvalue
         self.leg_count = leg_count
     
     def generate(self, seed, accuracy=100, paramseed=DefaultValue):
@@ -410,11 +463,12 @@ class Preset:
         gradation = param(self.gradation)
         staightness = param(self.straightness)
         distribution = param(self.distribution)
+        spreadvalue = param(self.spreadvalue)
         leg_count = param(self.leg_count)
         
         animal = Animal.from_params(length=int(length), gradation=gradation,
                                     straightness=staightness, distribution=distribution,
-                                    leg_count=int(leg_count), seed=seed)
+                                    leg_count=int(leg_count), spreadvalue=spreadvalue, seed=seed)
 
         return animal
     
