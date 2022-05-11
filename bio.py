@@ -37,6 +37,19 @@ class Spine(Category):
             output.append(vec)
         return VectorChain(*output)
 
+def head(seed, complexity=2) -> Spine:
+    spine = Spine()
+    spine.length = int(complexity)
+    spine.gradation = 0
+    spine.straightness = 0
+    spine.distribution = 0
+    spine.spreadvalue = 0
+    spine.seed_v = seed * 92343
+    spine.seed_h = seed * 42931
+    spine.seed_w = seed * 41899
+    spine.seed_s = seed * 58027
+
+
 class Animal:
     def __init__(self):
         self.spine = Spine()
