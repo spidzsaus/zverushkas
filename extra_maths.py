@@ -130,6 +130,13 @@ class VectorChain:
     def __init__(self, *vecs):
         self.vectors = vecs
     
+    def __add__(self, other):
+        return VectorChain(*(self.vectors + other.vectors))
+    
+    def __iadd__(self, other):
+        self = self + other
+        return self
+    
     def __len__(self):
         return len(self.vectors)
 
