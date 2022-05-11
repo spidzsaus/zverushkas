@@ -588,12 +588,13 @@ class AnimalDraw:
 class Preset:
     def __init__(self, length=(9, 15), gradation=(0.2, 50.), 
                  straightness=(2, 20.0), distribution=(10.0, 50.0), leg_count=(1, 4),
-                 spreadvalue=(10.0, 50.0)):
+                 spreadvalue=(10.0, 50.0), gibbosity=(10.0, 50.0)):
         self.length = length
         self.gradation = gradation
         self.straightness = straightness
         self.distribution = distribution
         self.spreadvalue = spreadvalue
+        self.gibbosity = spreadvalue
         self.leg_count = leg_count
     
     def generate(self, seed, accuracy=100, paramseed=DefaultValue):
@@ -613,11 +614,13 @@ class Preset:
         staightness = param(self.straightness)
         distribution = param(self.distribution)
         spreadvalue = param(self.spreadvalue)
+        gibbosity = param(self.gibbosity)
         leg_count = param(self.leg_count)
         
         animal = Animal.from_params(length=int(length), gradation=gradation,
                                     straightness=staightness, distribution=distribution,
-                                    leg_count=int(leg_count), spreadvalue=spreadvalue, seed=seed)
+                                    leg_count=int(leg_count), spreadvalue=spreadvalue, gibbosity=gibbosity,
+                                    seed=seed)
 
         return animal
     
