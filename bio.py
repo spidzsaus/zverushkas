@@ -120,6 +120,9 @@ class Animal:
         spine.seed_w = seed * 76345
         spine.seed_s = seed * 51356
         spine.seed_d = seed * 54367
+        spine.hfunc = VARX + 0.01
+        spine.bfunc = VARX * 0.75
+        spine.wfunc = VARX * 0.75
         animal.spine = spine
         
         joints = []
@@ -131,8 +134,8 @@ class Animal:
             try:
                 comparator = (v1.dot_product(v2) / (v1.length() * v2.length()))
             except ZeroDivisionError:
-                comparator = 0
-            #comparator += 0.01 * (le/2 - abs(le/2 - i))
+                comparator = 0.05
+            comparator += 0.01 * (abs(le/2 - i))
             joints.append((i - 1, comparator, bone.length(), bone.z))
         joints.sort(key=lambda x: x[1], reverse=True)
 
@@ -149,11 +152,11 @@ class Animal:
             leg.seed_w = seed * 51618 * (i + 1)
             leg.seed_s = seed * 25345 * (i + 1)
             leg.seed_d = seed * 54367 * (i + 1)
-            leg.hfunc = joints[i][2] + VARX.abs() * 1.5  + 0.4
+            leg.hfunc = joints[i + 1][2] + VARX.abs() * 1.5  + 0.4
             leg.vfunc = VARX - pi / 2
-            leg.wfunc = joints[i][3] / 2 + VARX * 0.3
-            leg.bfunc = joints[i][3] / 2 + VARX * 0.3
-            animal.legs[joints[i][0]] = leg
+            leg.wfunc = joints[i + 1][3] / 2 + VARX * 0.3
+            leg.bfunc = joints[i + 1][3] / 2 + VARX * 0.3
+            animal.legs[joints[i + 1][0]] = leg
         animal.head = head(seed * 931872123)
 
         return animal
