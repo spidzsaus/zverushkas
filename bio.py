@@ -59,7 +59,7 @@ class Spine(Category):
             output.append(vec)
         return VectorChain(*output)
 
-def head(seed, complexity=2) -> Spine:
+def head(seed, complexity=3) -> Spine:
     spine = Spine()
     spine.length = int(complexity)
     spine.gradation = 0.6
@@ -90,6 +90,7 @@ class Animal:
                          self.spine.straightness,
                          self.spine.distribution,
                          self.spine.spreadvalue,
+                         self.spine.gibbosity,
                          len(self.legs)
                          ])
     
@@ -148,7 +149,7 @@ class Animal:
             leg.seed_w = seed * 51618 * (i + 1)
             leg.seed_s = seed * 25345 * (i + 1)
             leg.seed_d = seed * 54367 * (i + 1)
-            leg.hfunc = joints[i][2] + VARX.abs() * 1.5  + 0.1
+            leg.hfunc = joints[i][2] + VARX.abs() * 1.5  + 0.4
             leg.vfunc = VARX - pi / 2
             leg.wfunc = joints[i][3] / 2 + VARX * 0.3
             leg.bfunc = joints[i][3] / 2 + VARX * 0.3
@@ -191,6 +192,7 @@ class AnimalDraw:
         spine = self.animal.spine.to_vectors()
         coords = Vector2(0, 0)
         vertecies = []
+        ground = self.ground
         faces = []
         vb_offset = 0
         w = 0
@@ -236,7 +238,7 @@ class AnimalDraw:
             w = bone.z
             hh = bone.b
             spr = bone.a
-            origin = w
+            origin = bone.a
             local_leg_vb_size = 0
             if i in self.animal.legs:
                 for offset in -1, 1:
@@ -248,6 +250,8 @@ class AnimalDraw:
                     dh = hh
                     dspread = origin
                     for j, bone in enumerate(leg):
+                        if ground is not DefaultValue:
+                            bone.y *= -1
                         dnewcoords = dcoords + bone
                         bone._angle = bone.calc_angle()
                         a, b, c, d = cross_vertecies(dcoords, dh, dw,  w * offset * j + offset * dspread , alpha=bone.angle, spread=dw / 2 )
@@ -302,8 +306,9 @@ class AnimalDraw:
                     local_leg_vb_size += 5
                     vb_offset += 5
 
-        head = self.animal.head.to_vectors((self.animal.spine, 1.5))
+        head = self.animal.head.to_vectors((self.animal.spine, 1))
         for i, bone in enumerate(head):
+            
             newcoords = coords + bone
             a, b, c, d = cross_vertecies(coords, hh, w, alpha=bone.angle, spread=spr)
             e, f, g, h = cross_vertecies(newcoords, bone.b, bone.z, alpha=bone.angle, spread=bone.a)
@@ -355,7 +360,7 @@ class AnimalDraw:
         from extra_maths import Vector2
         maxwidth = 0
         spine = self.animal.spine.to_vectors()
-        head = self.animal.head.to_vectors((self.animal.spine, 1.5))
+        head = self.animal.head.to_vectors((self.animal.spine, 1))
         spine += head
         length = 0
         spine_dots = [(0,0)]
@@ -449,6 +454,8 @@ class AnimalDraw:
                 dw = w
                 dh = hh
                 for j, bone in enumerate(leg):
+                    if ground is not DefaultValue:
+                        bone.y *= -1
                     objects.append([[], []])
                     dnewcoords = dcoords + bone
                     bone._angle = bone.calc_angle()
@@ -494,8 +501,8 @@ class AnimalDraw:
             returnim = True
             position = position - Vector2(left, up) * scale
         
-        if ground is not DefaultValue:
-            draw.line(((0, ground - up * scale), (int(abs(right - left) * scale), ground - up * scale)), fill=(0, 255, 0))
+       # if ground is not DefaultValue:
+            #draw.line(((0, ground - up * scale), (int(abs(right - left) * scale), ground - up * scale)), fill=(0, 255, 0))
         for color, obj in enumerate(objects):
             dots = obj[0] + list(reversed(obj[1]))
             for i in range(len(dots)):

@@ -153,8 +153,8 @@ class VectorChain:
                         start - vec1 - dest]
             else:
                 unit = v / c
-                return [unit * a * -1,
-                        unit * b * -1]
+                return [unit * a,
+                        unit * b ]
         
         if not self.count == 2:
             return NotImplemented
