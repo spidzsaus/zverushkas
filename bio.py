@@ -248,7 +248,6 @@ class AnimalDraw:
                     dh = hh
                     dspread = origin
                     for j, bone in enumerate(leg):
-                        bone.y *= -1
                         dnewcoords = dcoords + bone
                         bone._angle = bone.calc_angle()
                         a, b, c, d = cross_vertecies(dcoords, dh, dw,  w * offset * j + offset * dspread , alpha=bone.angle, spread=dw / 2 )
@@ -451,7 +450,6 @@ class AnimalDraw:
                 dh = hh
                 for j, bone in enumerate(leg):
                     objects.append([[], []])
-                    bone.y *= -1
                     dnewcoords = dcoords + bone
                     bone._angle = bone.calc_angle()
                     a, b = edges(dcoords, dh, dw, alpha=bone.angle)
