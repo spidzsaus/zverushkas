@@ -1,4 +1,3 @@
-from operator import pos
 from extra_maths import Vector2, randint
 from extra_maths import x as VARX
 from extra_types import Category, DefaultValue
@@ -42,7 +41,7 @@ class Spine(Category):
             a = sfunc(abs(perlin1d(seeds, (i + 1) / divs )))
             b = bfunc(abs(perlin1d(seedb, (i + 1) / divb )))
             for subspine, coeff in octaves:
-                x += subspine.hfunc(abs(perlin1d(subspine.seed_h, i / subspine.gradation))) * coeff
+                #x += subspine.hfunc(abs(perlin1d(subspine.seed_h, i / subspine.gradation))) * coeff
                 y += subspine.vfunc(perlin1d(subspine.seed_v, i / subspine.straightness) * pi * 1.15) * coeff
                 z += subspine.wfunc(abs(perlin1d(subspine.seed_w, (i + 1) / subspine.distribution ))) * coeff
                 a += subspine.sfunc(abs(perlin1d(subspine.seed_s, (i + 1) / subspine.spreadvalue ))) * coeff
@@ -54,7 +53,10 @@ class Spine(Category):
             output.append(vec)
         if self.sharp: 
             x = xfunc(abs(perlin1d(seedx, self.length / divx)))
-            y = yfunc(perlin1d(seedy, self.length / divy) * pi * 1.15)
+            y = yfunc(perlin1d(seedy, i / divy) * pi * 1.15)
+            for subspine, coeff in octaves:
+                #x += subspine.hfunc(abs(perlin1d(subspine.seed_h, self.length / subspine.gradation))) * coeff
+                y += subspine.vfunc(perlin1d(subspine.seed_v, i / subspine.straightness) * pi * 1.15) * coeff
             vec = Vector2.pointed(x, y)
             output.append(vec)
         return VectorChain(*output)
@@ -63,10 +65,10 @@ def head(seed, complexity=3) -> Spine:
     spine = Spine()
     spine.length = int(complexity)
     spine.gradation = 0.6
-    spine.straightness = 30
-    spine.distribution = 10
+    spine.straightness = 100
+    spine.distribution = 5
     spine.spreadvalue = 4
-    spine.gibbosity = 10
+    spine.gibbosity = 4
     spine.seed_v = seed * 92343
     spine.seed_h = seed * 42931
     spine.seed_w = seed * 41899
@@ -101,7 +103,6 @@ class Animal:
     @staticmethod
     def from_params(length, gradation, straightness, 
                     distribution, spreadvalue, gibbosity, leg_count, seed):
-        from extra_maths import randint
         from math import pi
         
         leg_count = int(min(leg_count, length - 1))
@@ -119,10 +120,11 @@ class Animal:
         spine.seed_h = seed * 26714
         spine.seed_w = seed * 76345
         spine.seed_s = seed * 51356
-        spine.seed_d = seed * 54367
+        spine.seed_b = seed * 54367
         spine.hfunc = VARX + 0.01
         spine.bfunc = VARX * 0.75
         spine.wfunc = VARX * 0.75
+        spine.sfunc = VARX * 1.5
         animal.spine = spine
         
         joints = []
@@ -151,11 +153,12 @@ class Animal:
             leg.seed_h = seed * 35231 * (i + 1)
             leg.seed_w = seed * 51618 * (i + 1)
             leg.seed_s = seed * 25345 * (i + 1)
-            leg.seed_d = seed * 54367 * (i + 1)
+            leg.seed_b = seed * 54367 * (i + 1)
             leg.hfunc = joints[i + 1][2] + VARX.abs() * 1.5  + 0.4
             leg.vfunc = VARX - pi / 2
             leg.wfunc = joints[i + 1][3] / 2 + VARX * 0.3
             leg.bfunc = joints[i + 1][3] / 2 + VARX * 0.3
+            leg.sfunc = VARX * 2
             animal.legs[joints[i + 1][0]] = leg
         animal.head = head(seed * 931872123)
 
@@ -257,8 +260,8 @@ class AnimalDraw:
                             bone.y *= -1
                         dnewcoords = dcoords + bone
                         bone._angle = bone.calc_angle()
-                        a, b, c, d = cross_vertecies(dcoords, dh, dw,  w * offset * j + offset * dspread , alpha=bone.angle, spread=dw / 2 )
-                        e, f, g, h = cross_vertecies(dnewcoords, bone.b, bone.z, w * offset * (j + 1) + offset * bone.a, alpha=bone.angle, spread = bone.z / 2)                            
+                        a, b, c, d = cross_vertecies(dcoords, dh, dw,  w * offset * j + offset * dspread , alpha=bone.angle, spread=(dh + dw) / 4)
+                        e, f, g, h = cross_vertecies(dnewcoords, bone.b, bone.z, w * offset * (j + 1) + offset * bone.a, alpha=bone.angle, spread=(bone.b + bone.z) / 4)                            
 
                         vertecies.extend([a, b, c, d, e, f, g, h])
                         if not j:
@@ -477,8 +480,9 @@ class AnimalDraw:
                     dh = bone.b
 
         head = self.animal.head.to_vectors((self.animal.spine, 1.5))
-        objects.append([[], []])
+        #objects.append([[], []])
         for i, bone in enumerate(head):
+            objects.append([[], []])
             newcoords = coords + bone
             a, b = edges(coords, hh, w, alpha=bone.angle)
             c, d = edges(newcoords, bone.b, bone.z, alpha=bone.angle)
@@ -498,14 +502,16 @@ class AnimalDraw:
         returnim = False
         if draw is DefaultValue:
             from PIL import Image, ImageDraw
-            output = Image.new('RGBA', (int(abs(right - left) * scale), 
-                                        int(abs(down - up) * scale)))
+            image_height = int(abs(right - left) * scale)
+            image_width = int(abs(down - up) * scale)
+            output = Image.new('RGBA', (image_height, 
+                                        image_width))
             draw = ImageDraw.Draw(output)
             returnim = True
             position = position - Vector2(left, up) * scale
         
-       # if ground is not DefaultValue:
-            #draw.line(((0, ground - up * scale), (int(abs(right - left) * scale), ground - up * scale)), fill=(0, 255, 0))
+        if ground is not DefaultValue:
+            draw.line(((0, (down + ground) * scale), (int(abs(right - left) * scale), (down + ground) * scale)), fill=(0, 255, 0))
         for color, obj in enumerate(objects):
             dots = obj[0] + list(reversed(obj[1]))
             for i in range(len(dots)):
@@ -593,19 +599,21 @@ class AnimalDraw:
             return output
         
 
-class Preset:
-    def __init__(self, length=(9, 15), gradation=(0.2, 50.), 
-                 straightness=(2, 20.0), distribution=(10.0, 50.0), leg_count=(1, 4),
-                 spreadvalue=(10.0, 50.0), gibbosity=(10.0, 50.0)):
+class AnimalGenerator:
+    def __init__(self, length=(7, 15), gradation=(0.2, 50.), straightness=(0.02, 10.0), gibbosity=(5.0, 50.0), 
+                 distribution=(5.0, 50.0), spreadvalue=(5.0, 50.0), leg_count=(1, 4)):
         self.length = length
         self.gradation = gradation
         self.straightness = straightness
         self.distribution = distribution
         self.spreadvalue = spreadvalue
-        self.gibbosity = spreadvalue
+        self.gibbosity = gibbosity
         self.leg_count = leg_count
     
-    def generate(self, seed, accuracy=100, paramseed=DefaultValue):
+    def generate(self, seed=DefaultValue, accuracy=100, paramseed=DefaultValue):
+        from random import randint as ra
+        if seed is DefaultValue:
+            seed = ra(0, 100000000)
         if paramseed is DefaultValue:
             paramseed = seed
         salt = [52961]
